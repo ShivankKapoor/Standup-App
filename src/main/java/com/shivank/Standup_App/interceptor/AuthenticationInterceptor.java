@@ -1,5 +1,6 @@
 package com.shivank.Standup_App.interceptor;
 
+import com.shivank.Standup_App.service.IpAddressService;
 import com.shivank.Standup_App.service.LoggingService;
 import com.shivank.Standup_App.service.RateLimitService;
 import com.shivank.Standup_App.service.SessionService;
@@ -22,11 +23,14 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
     @Autowired
     private LoggingService loggingService;
     
+    @Autowired
+    private IpAddressService ipAddressService;
+    
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         String requestURI = request.getRequestURI();
         String method = request.getMethod();
-        String ip = getClientIpAddress(request);
+        String ip = ipAddressService.getClientIpAddress(request);
         String userAgent = request.getHeader("User-Agent");
         
         // Skip authentication for certain endpoints
@@ -81,19 +85,5 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
             }
         }
         return null;
-    }
-    
-    private String getClientIpAddress(HttpServletRequest request) {
-        String xForwardedFor = request.getHeader("X-Forwarded-For");
-        if (xForwardedFor != null && !xForwardedFor.isEmpty()) {
-            return xForwardedFor.split(",")[0].trim();
-        }
-        
-        String xRealIP = request.getHeader("X-Real-IP");
-        if (xRealIP != null && !xRealIP.isEmpty()) {
-            return xRealIP;
-        }
-        
-        return request.getRemoteAddr();
     }
 }

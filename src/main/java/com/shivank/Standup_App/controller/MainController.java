@@ -1,6 +1,7 @@
 package com.shivank.Standup_App.controller;
 
 import com.shivank.Standup_App.service.CalendarService;
+import com.shivank.Standup_App.service.IpAddressService;
 import com.shivank.Standup_App.service.LoggingService;
 import com.shivank.Standup_App.service.RateLimitService;
 import com.shivank.Standup_App.service.SessionService;
@@ -37,6 +38,9 @@ public class MainController {
     
     @Autowired
     private CalendarService calendarService;
+    
+    @Autowired
+    private IpAddressService ipAddressService;
     
     @Value("${auth.username}")
     private String authUsername;
@@ -95,10 +99,10 @@ public class MainController {
                            HttpServletResponse response,
                            Model model) {
         
-        String ip = getClientIpAddress(request);
+        String ip = ipAddressService.getClientIpAddress(request);
         
         // Check authentication rate limiting
-        if (!rateLimitService.checkAuthenticationRateLimit(ip)) {
+        if (!rateLimitService.checkAuthenticationRateLimit(request)) {
             loggingService.logRateLimitViolation(ip, "AUTH_ATTEMPT", 
                     "Exceeded 5 login attempts per hour");
             model.addAttribute("error", "Too many login attempts. Please try again later.");
@@ -106,7 +110,7 @@ public class MainController {
         }
         
         // Check if account is locked
-        if (rateLimitService.isAccountLocked(ip)) {
+        if (rateLimitService.isAccountLocked(request)) {
             loggingService.logSecurityEvent("ACCOUNT_LOCKED", 
                     "IP: " + ip + " - Account locked due to failed attempts");
             model.addAttribute("error", "Account temporarily locked due to multiple failed attempts.");
@@ -140,7 +144,7 @@ public class MainController {
     @GetMapping("/logout")
     public String logout(HttpServletRequest request, HttpServletResponse response) {
         String currentUser = (String) request.getAttribute("currentUser");
-        String ip = getClientIpAddress(request);
+        String ip = ipAddressService.getClientIpAddress(request);
         
         // Clear session cookie
         Cookie cookie = new Cookie("session_token", "");
@@ -225,19 +229,5 @@ public class MainController {
         } catch (DateTimeParseException e) {
             return "redirect:/";
         }
-    }
-    
-    private String getClientIpAddress(HttpServletRequest request) {
-        String xForwardedFor = request.getHeader("X-Forwarded-For");
-        if (xForwardedFor != null && !xForwardedFor.isEmpty()) {
-            return xForwardedFor.split(",")[0].trim();
-        }
-        
-        String xRealIP = request.getHeader("X-Real-IP");
-        if (xRealIP != null && !xRealIP.isEmpty()) {
-            return xRealIP;
-        }
-        
-        return request.getRemoteAddr();
     }
 }
