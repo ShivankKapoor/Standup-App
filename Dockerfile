@@ -37,7 +37,7 @@ ENV WTF_CSRF_TIME_LIMIT=3600
 # Expose port 5555
 EXPOSE 5555
 
-# Health check
+# Health check (using HTTP)
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
   CMD curl -f http://localhost:5555/health || exit 1
 

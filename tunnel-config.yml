@@ -1,0 +1,21 @@
+# Cloudflare Tunnel Configuration for Standup App
+# Replace 'your-tunnel-id' and 'your-domain.com' with your actual values
+
+tunnel: your-tunnel-id
+credentials-file: /path/to/your/credentials.json
+
+ingress:
+  # Route your domain to the local HTTP server
+  - hostname: your-domain.com
+    service: http://localhost:5555
+    originRequest:
+      # Important: Disable TLS verification for local HTTP origin
+      noTLSVerify: true
+      # Set origin to HTTP
+      originServerName: localhost
+  
+  # Catch-all rule (required)
+  - service: http_status:404
+
+# Optional: Enable logging for debugging
+loglevel: info
