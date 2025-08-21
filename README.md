@@ -69,12 +69,18 @@ A Spring Boot web application that exactly replicates the Flask standup app func
 git clone <repository-url>
 cd standup-app
 
+# Create your .env file with credentials
+cp env.example .env
+# Edit .env with your actual credentials
+
 # Build and run with Docker Compose
 docker-compose up --build
 
 # Access the application
-open http://localhost:5000
+open http://localhost:5555
 ```
+
+**Note**: The `.env` file is automatically copied into the Docker container during build, so your credentials will be available to the application.
 
 ### Option 2: Local Development
 
@@ -262,17 +268,24 @@ mvn spring-boot:run -Dspring-boot.run.profiles=production
 ### Docker Build
 
 ```bash
-# Build Docker image
+# Build Docker image (includes Maven build and .env file)
 docker build -t standup-app .
 
-# Run container
-docker run -p 5000:5000 \
+# Run container with volume mounts for data persistence
+docker run -p 5555:5555 \
   -v $(pwd)/data:/app/data \
   -v $(pwd)/logs:/app/logs \
-  -e AUTH_USERNAME=your_username \
-  -e AUTH_PASSWORD="your_secure_password" \
+  standup-app
+
+# Or run in background
+docker run -d -p 5555:5555 \
+  -v $(pwd)/data:/app/data \
+  -v $(pwd)/logs:/app/logs \
+  --name standup-app \
   standup-app
 ```
+
+**Note**: The Docker image includes the `.env` file, so no environment variables need to be passed manually.
 
 ## Deployment
 
@@ -304,15 +317,18 @@ cloudflared tunnel run standup-app
 
 ### Production Deployment
 
-1. **Build the application**:
+1. **Create your environment file**:
    ```bash
-   mvn clean package -DskipTests
+   cp env.example .env
+   # Edit .env with your production credentials
    ```
 
 2. **Deploy with Docker**:
    ```bash
-   docker-compose -f docker-compose.prod.yml up -d
+   docker-compose up -d --build
    ```
+
+**Important**: The Dockerfile automatically copies the `.env` file into the container, so ensure your `.env` file contains the correct credentials before building.
 
 3. **Configure reverse proxy** (nginx/Apache)
 
