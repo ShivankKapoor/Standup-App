@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📋 Standup Entry</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            padding: 20px;
+        }
+        
+        .logout-container {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        
+        .logout-btn {
+            background: linear-gradient(135deg, #ff4757 0%, #ff3838 100%);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: transform 0.2s;
+            display: inline-block;
+        }
+        
+        .logout-btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .date-display {
+            font-size: 24px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .entry-content {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
+            margin-bottom: 20px;
+            min-height: 200px;
+            white-space: pre-wrap;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+        
+        .no-entry {
+            text-align: center;
+            color: #6c757d;
+            font-style: italic;
+            padding: 40px;
+        }
+        
+        .actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: transform 0.2s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-1px);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #ff4757 0%, #ff3838 100%);
+            color: white;
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #2ed573 0%, #1e90ff 100%);
+            color: white;
+        }
+        
+        @media (max-width: 768px) {
+            .actions {
+                flex-direction: column;
+            }
+            
+            .btn {
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="logout-container">
+        <a href="/logout" class="logout-btn" id="logout-btn">🚪 Logout</a>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1>📋 Standup Entry</h1>
+        </div>
+        
+        <div class="content">
+            <div class="date-display" th:text="${date.format(T(java.time.format.DateTimeFormatter).ofPattern('EEEE, MMMM d, yyyy'))}"></div>
+            
+            <div th:if="${hasContent}" class="entry-content" th:text="${content}"></div>
+            <div th:unless="${hasContent}" class="entry-content no-entry">
+                No standup entry for this date.
+            </div>
+            
+            <div class="actions">
+                <a th:href="@{/edit/{date}(date=${date.format(T(java.time.format.DateTimeFormatter).ofPattern('yyyy-MM-dd'))})}" class="btn btn-primary">✏️ Edit Entry</a>
+                
+                <form th:if="${hasContent}" th:action="@{/delete/{date}(date=${date.format(T(java.time.format.DateTimeFormatter).ofPattern('yyyy-MM-dd'))})}" method="post" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this entry?')">
+                    <button type="submit" class="btn btn-danger">🗑️ Delete Entry</button>
+                </form>
+                
+                <a href="/" class="btn btn-secondary">← Back to Calendar</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const logoutBtn = document.getElementById('logout-btn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', function(e) {
+                if (!confirm('Are you sure you want to logout?')) {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+        }
+    </script>
+</body>
+</html>
