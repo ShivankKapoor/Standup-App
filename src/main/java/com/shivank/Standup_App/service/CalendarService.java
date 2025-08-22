@@ -3,6 +3,7 @@ package com.shivank.Standup_App.service;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,6 +13,7 @@ import java.util.Map;
 public class CalendarService {
     
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private static final ZoneId CST_ZONE = ZoneId.of("America/Chicago");
     
     public static class CalendarDay {
         private LocalDate date;
@@ -45,7 +47,7 @@ public class CalendarService {
     
     public List<CalendarDay> generateCalendarDays(LocalDate displayDate, Map<String, String> standups) {
         List<CalendarDay> days = new ArrayList<>();
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(CST_ZONE);
         
         // Get first day of the month
         LocalDate firstDayOfMonth = displayDate.withDayOfMonth(1);

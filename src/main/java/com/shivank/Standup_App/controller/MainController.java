@@ -16,6 +16,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
@@ -49,6 +50,7 @@ public class MainController {
     private String authPassword;
     
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private static final ZoneId CST_ZONE = ZoneId.of("America/Chicago");
     
     // Debug endpoint to check auth values
     @GetMapping("/debug-auth")
@@ -63,7 +65,7 @@ public class MainController {
         
         // Get current month or requested month
         String monthParam = request.getParameter("month");
-        LocalDate displayDate = LocalDate.now();
+        LocalDate displayDate = LocalDate.now(CST_ZONE);
         
         if (monthParam != null) {
             try {
@@ -79,7 +81,7 @@ public class MainController {
         model.addAttribute("currentUser", currentUser);
         model.addAttribute("displayDate", displayDate);
         model.addAttribute("calendarDays", calendarDays);
-        model.addAttribute("today", LocalDate.now());
+        model.addAttribute("today", LocalDate.now(CST_ZONE));
         
         return "index";
     }
