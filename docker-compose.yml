@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  standup-app:
+    build: .
+    container_name: standup-app
+    ports:
+      - "5555:5555"
+    volumes:
+      # Persist data outside container
+      - ./data:/app/data
+      - ./logs:/app/logs
+    environment:
+      # Override with your actual values
+      - AUTH_USERNAME=${AUTH_USERNAME}
+      - AUTH_PASSWORD=${AUTH_PASSWORD}
+      - FLASK_SECRET_KEY=${FLASK_SECRET_KEY}
+      - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL}
+      - WTF_CSRF_TIME_LIMIT=${WTF_CSRF_TIME_LIMIT:-3600}
+      - STANDUPS_FILE=/app/data/Standups.txt
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5555/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - standup-network
+
+networks:
+  standup-network:
+    driver: bridge

@@ -128,11 +128,18 @@ public class MainController {
         // Create session token
         String sessionToken = sessionService.createSessionToken(username);
         
-        // Set cookie
+        // Set cookie with proxy-aware domain settings
         Cookie cookie = new Cookie("session_token", sessionToken);
         cookie.setMaxAge(8 * 3600); // 8 hours
         cookie.setHttpOnly(true);
         cookie.setPath("/");
+        
+        // For Cloudflare Tunnel: don't set Secure flag as it's HTTP to container
+        // Cloudflare handles HTTPS termination
+        cookie.setSecure(false);
+        
+        // Set SameSite for better security with proxies
+        // Note: This might need to be handled in application.properties instead
         response.addCookie(cookie);
         
         loggingService.logSecurityEvent("LOGIN_SUCCESS", 
@@ -146,11 +153,12 @@ public class MainController {
         String currentUser = (String) request.getAttribute("currentUser");
         String ip = ipAddressService.getClientIpAddress(request);
         
-        // Clear session cookie
+        // Clear session cookie with same settings as when it was set
         Cookie cookie = new Cookie("session_token", "");
         cookie.setMaxAge(0);
         cookie.setHttpOnly(true);
         cookie.setPath("/");
+        cookie.setSecure(false); // Match login cookie settings
         response.addCookie(cookie);
         
         if (currentUser != null) {
