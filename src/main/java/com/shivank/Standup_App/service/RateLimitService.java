@@ -16,6 +16,7 @@ public class RateLimitService {
     
     private final ConcurrentHashMap<String, AttemptInfo> authAttempts = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, AttemptInfo> authenticatedRequests = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, AttemptInfo> healthCheckRequests = new ConcurrentHashMap<>();
     
     private static class AttemptInfo {
         private final AtomicInteger count = new AtomicInteger(0);
@@ -74,6 +75,16 @@ public class RateLimitService {
         // 60 requests per hour per user
         AttemptInfo attempts = authenticatedRequests.computeIfAbsent(username, k -> new AttemptInfo());
         return attempts.canAttempt(60, 3600);
+    }
+    
+    /**
+     * Check health endpoint rate limit
+     * 10 requests per hour per IP
+     */
+    public boolean checkHealthEndpointRateLimit(HttpServletRequest request) {
+        String realIpAddress = ipAddressService.getClientIpAddress(request);
+        AttemptInfo attempts = healthCheckRequests.computeIfAbsent(realIpAddress, k -> new AttemptInfo());
+        return attempts.canAttempt(10, 3600);
     }
     
     public int getAuthenticationAttempts(String ipAddress) {
