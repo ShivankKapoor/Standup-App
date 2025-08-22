@@ -45,7 +45,10 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
         
         if (username == null) {
             loggingService.logAccessEvent(ip, method, requestURI, userAgent, "UNAUTHENTICATED");
-            response.sendRedirect("/login");
+            
+            // Use relative redirect to preserve proxy headers and domain
+            String loginUrl = buildProxyAwareRedirectUrl(request, "/login");
+            response.sendRedirect(loginUrl);
             return false;
         }
         
@@ -85,5 +88,32 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
             }
         }
         return null;
+    }
+    
+    /**
+     * Build a proxy-aware redirect URL that works with Cloudflare Tunnel
+     * This preserves the correct protocol and domain when behind a proxy
+     */
+    private String buildProxyAwareRedirectUrl(HttpServletRequest request, String path) {
+        // Check if we're behind a proxy (Cloudflare Tunnel)
+        String forwardedProto = request.getHeader("X-Forwarded-Proto");
+        String forwardedHost = request.getHeader("X-Forwarded-Host");
+        String cfVisitorProto = request.getHeader("CF-Visitor");
+        
+        // If we have Cloudflare headers, use them
+        if (forwardedProto != null && forwardedHost != null) {
+            return forwardedProto + "://" + forwardedHost + path;
+        }
+        
+        // If we have CF-Visitor header (Cloudflare specific)
+        if (cfVisitorProto != null && cfVisitorProto.contains("https")) {
+            String host = request.getHeader("Host");
+            if (host != null) {
+                return "https://" + host + path;
+            }
+        }
+        
+        // Fallback to relative redirect (safest for proxy setups)
+        return path;
     }
 }
