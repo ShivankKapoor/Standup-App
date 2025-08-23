@@ -4,90 +4,88 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>📋 Standup Entry</title>
+    <link rel="stylesheet" th:href="@{/css/theme.css}">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
             min-height: 100vh;
-            color: #333;
-            padding: 20px;
+            padding: var(--spacing-lg);
         }
         
         .logout-container {
             position: absolute;
-            top: 20px;
-            right: 20px;
+            top: var(--spacing-lg);
+            right: var(--spacing-lg);
             z-index: 1000;
         }
         
         .logout-btn {
-            background: linear-gradient(135deg, #ff4757 0%, #ff3838 100%);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 5px;
+            background: var(--warn);
+            color: var(--background);
+            padding: var(--spacing-md) var(--spacing-lg);
+            border-radius: var(--border-radius-md);
             text-decoration: none;
-            font-weight: 500;
-            transition: transform 0.2s;
+            font-weight: var(--font-weight-medium);
+            transition: all var(--transition-normal);
             display: inline-block;
+            box-shadow: var(--shadow-md);
         }
         
         .logout-btn:hover {
+            background: var(--warn-dark);
             transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
         }
         
         .container {
             max-width: 800px;
             margin: 0 auto;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            background: var(--background);
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--shadow-xl);
             overflow: hidden;
         }
         
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            color: var(--background);
+            padding: var(--spacing-xl);
             text-align: center;
         }
         
         .header h1 {
             font-size: 28px;
-            margin-bottom: 10px;
+            margin-bottom: var(--spacing-md);
+            font-weight: var(--font-weight-bold);
         }
         
         .content {
-            padding: 30px;
+            padding: var(--spacing-xl);
         }
         
         .date-display {
             font-size: 24px;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 20px;
+            font-weight: var(--font-weight-semibold);
+            color: var(--text);
+            margin-bottom: var(--spacing-lg);
             text-align: center;
         }
         
         .entry-content {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 5px;
-            border: 1px solid #dee2e6;
-            margin-bottom: 20px;
+            background: var(--background-dark);
+            padding: var(--spacing-lg);
+            border-radius: var(--border-radius-md);
+            border: 1px solid var(--background-darker);
+            margin-bottom: var(--spacing-lg);
             min-height: 200px;
             white-space: pre-wrap;
             font-size: 16px;
             line-height: 1.6;
+            color: var(--text);
         }
         
         .no-entry {
-            color: #6c757d;
+            color: var(--text-muted);
             font-style: italic;
             display: flex;
             align-items: center;
@@ -100,13 +98,13 @@
         .actions {
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: var(--spacing-md);
             align-items: center;
         }
         
         .button-row-top {
             display: flex;
-            gap: 10px;
+            gap: var(--spacing-md);
             justify-content: center;
             flex-wrap: wrap;
         }
@@ -116,43 +114,16 @@
             justify-content: center;
         }
         
-        .btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 5px;
-            font-size: 16px;
-            font-weight: 500;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
-            transition: transform 0.2s;
-        }
-        
-        .btn:hover {
-            transform: translateY(-1px);
-        }
-        
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-        
-        .btn-secondary {
-            background: #6c757d;
-            color: white;
-        }
-        
-        .btn-danger {
-            background: linear-gradient(135deg, #ff4757 0%, #ff3838 100%);
-            color: white;
-        }
-        
         .btn-success {
-            background: linear-gradient(135deg, #2ed573 0%, #1e90ff 100%);
-            color: white;
+            background: linear-gradient(135deg, var(--success) 0%, #1e90ff 100%);
+            color: var(--background);
         }
         
         @media (max-width: 768px) {
+            body {
+                padding: var(--spacing-md);
+            }
+            
             .actions {
                 flex-direction: column;
             }
@@ -183,8 +154,8 @@
             
             <div class="actions">
                 <div class="button-row-top">
-                    <a href="/" class="btn btn-secondary">← Back to Calendar</a>
-                    <a th:href="@{/edit/{date}(date=${date.format(T(java.time.format.DateTimeFormatter).ofPattern('yyyy-MM-dd'))})}" class="btn btn-primary">✏️ Edit Entry</a>
+                    <a href="/" class="btn btn-accent">← Back to Calendar</a>
+                    <a th:href="@{/edit/{date}(date=${date.format(T(java.time.format.DateTimeFormatter).ofPattern('yyyy-MM-dd'))})}" class="btn btn-secondary">✏️ Edit Entry</a>
                 </div>
                 
                 <div class="button-row-bottom" th:if="${hasContent}">
