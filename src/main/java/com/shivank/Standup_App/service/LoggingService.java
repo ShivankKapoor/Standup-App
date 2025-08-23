@@ -111,7 +111,7 @@ public class LoggingService {
         
         // Parse details to extract IP and username
         String ip = extractFromDetails(details, "IP: ");
-        String username = extractFromDetails(details, "user: ");
+        String username = extractFromDetails(details, "User: ");
         ZonedDateTime cstTime = ZonedDateTime.now(CST_ZONE);
         String timestamp = cstTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + " CST";
         

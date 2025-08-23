@@ -122,7 +122,7 @@ public class MainController {
         // Validate credentials (username case-insensitive, password case-sensitive)
         if (!authUsername.equalsIgnoreCase(username) || !authPassword.equals(password)) {
             loggingService.logSecurityEvent("LOGIN_FAILED", 
-                    "IP: " + ip + " - Invalid credentials for user: " + username);
+                    "IP: " + ip + " - Invalid credentials for User: " + username);
             model.addAttribute("error", "Invalid username or password");
             return "login";
         }
