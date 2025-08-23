@@ -8,9 +8,9 @@
     <style>
         body {
             background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
-            height: 100vh;
+            min-height: 100vh;
             padding: var(--spacing-md);
-            overflow: hidden;
+            overflow-x: hidden;
         }
         
         .logout-container {
@@ -40,7 +40,7 @@
         
         .container {
             max-width: 1200px;
-            height: calc(100vh - calc(var(--spacing-md) * 2));
+            min-height: calc(100vh - calc(var(--spacing-md) * 2));
             margin: 0 auto;
             background: var(--background);
             border-radius: var(--border-radius-lg);
@@ -143,7 +143,7 @@
         .calendar {
             padding: var(--spacing-lg);
             flex: 1;
-            overflow: hidden;
+            overflow-y: auto;
             display: flex;
             flex-direction: column;
         }
@@ -158,7 +158,8 @@
             border-radius: var(--border-radius-md);
             overflow: hidden;
             flex: 1;
-            height: 100%;
+            min-height: 400px;
+            height: auto;
         }
         
         .day-header {
@@ -220,6 +221,8 @@
         @media (max-width: 768px) {
             body {
                 padding: var(--spacing-sm);
+                overflow-x: hidden;
+                overflow-y: auto;
             }
             
             .logout-container {
@@ -235,7 +238,9 @@
             }
             
             .container {
-                height: calc(100vh - calc(var(--spacing-sm) * 2));
+                min-height: auto;
+                max-height: none;
+                margin-bottom: var(--spacing-lg);
             }
             
             .calendar-nav {
@@ -247,10 +252,19 @@
             
             .calendar {
                 padding: var(--spacing-md);
+                overflow-y: visible;
+            }
+            
+            .calendar-grid {
+                min-height: 350px;
+                height: auto;
+                grid-template-rows: auto repeat(6, minmax(50px, auto));
             }
             
             .day-cell {
                 font-size: 12px;
+                min-height: 50px;
+                padding: var(--spacing-xs);
             }
             
             .day-header {
@@ -285,6 +299,65 @@
             
             .month-year {
                 font-size: 18px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            body {
+                padding: var(--spacing-xs);
+            }
+            
+            .container {
+                border-radius: var(--border-radius-md);
+            }
+            
+            .calendar {
+                padding: var(--spacing-sm);
+            }
+            
+            .calendar-grid {
+                min-height: 320px;
+                grid-template-rows: auto repeat(6, minmax(45px, auto));
+            }
+            
+            .day-cell {
+                min-height: 45px;
+                font-size: 11px;
+            }
+            
+            .day-header {
+                font-size: 11px;
+                padding: var(--spacing-xs);
+            }
+            
+            .header {
+                padding: var(--spacing-xs) var(--spacing-md);
+            }
+            
+            .header h1 {
+                font-size: 18px;
+            }
+            
+            .calendar-nav {
+                padding: var(--spacing-sm) var(--spacing-md);
+            }
+            
+            .nav-btn {
+                padding: var(--spacing-sm) var(--spacing-md);
+                font-size: 14px;
+            }
+            
+            .month-year {
+                font-size: 16px;
+            }
+            
+            .live-time {
+                font-size: 13px;
+                min-width: 110px;
+            }
+            
+            .current-date {
+                font-size: 10px;
             }
         }
     </style>
