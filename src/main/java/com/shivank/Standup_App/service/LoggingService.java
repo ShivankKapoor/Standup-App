@@ -14,6 +14,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
@@ -26,6 +28,7 @@ public class LoggingService {
     
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private static final ZoneId CST_ZONE = ZoneId.of("America/Chicago");
     
     public void logAppEvent(String message) {
         logToFile("logs/app.log", message);
@@ -109,7 +112,8 @@ public class LoggingService {
         // Parse details to extract IP and username
         String ip = extractFromDetails(details, "IP: ");
         String username = extractFromDetails(details, "User: ");
-        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + " UTC";
+        ZonedDateTime cstTime = ZonedDateTime.now(CST_ZONE);
+        String timestamp = cstTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + " CST";
         
         // Set author
         author.put("name", "Standup App Security Alert");
@@ -169,11 +173,11 @@ public class LoggingService {
         
         // Set footer
         Map<String, Object> footer = new HashMap<>();
-        footer.put("text", "Standup App Security Alert • " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("MMM dd 'at' h:mm a")));
+        footer.put("text", "Standup App Security Alert • " + cstTime.format(DateTimeFormatter.ofPattern("MMM dd 'at' h:mm a")) + " CST");
         embed.put("footer", footer);
         
         // Set timestamp
-        embed.put("timestamp", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME) + "Z");
+        embed.put("timestamp", cstTime.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
         
         payload.put("username", "Standup Bot");
         payload.put("embeds", java.util.Arrays.asList(embed));
