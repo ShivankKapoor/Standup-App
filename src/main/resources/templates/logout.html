@@ -4,18 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>📋 Logged Out</title>
+    <link rel="stylesheet" th:href="@{/css/theme.css}">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
             min-height: 100vh;
-            color: #333;
         }
         
         .logout-container {
@@ -23,60 +16,79 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            padding: 20px;
+            padding: var(--spacing-lg);
         }
         
         .logout-box {
-            background: white;
-            padding: 40px;
-            border-radius: 10px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            background: var(--background);
+            padding: var(--spacing-xxl);
+            border-radius: var(--border-radius-xl);
+            box-shadow: var(--shadow-xl);
             width: 100%;
             max-width: 400px;
             text-align: center;
+            border: 1px solid var(--background-dark);
         }
         
         .logout-header {
-            margin-bottom: 30px;
+            margin-bottom: var(--spacing-xl);
         }
         
         .logout-header h1 {
             font-size: 28px;
-            margin-bottom: 10px;
-            color: #333;
+            margin-bottom: var(--spacing-md);
+            color: var(--text);
+            font-weight: var(--font-weight-bold);
         }
         
         .logout-message {
-            color: #28a745;
+            color: var(--success);
             font-size: 18px;
-            margin-bottom: 20px;
-            font-weight: 500;
+            margin-bottom: var(--spacing-lg);
+            font-weight: var(--font-weight-medium);
         }
         
         .redirect-message {
-            color: #666;
+            color: var(--text-light);
             font-size: 16px;
-            margin-bottom: 20px;
+            margin-bottom: var(--spacing-lg);
         }
         
         .login-link {
             display: inline-block;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 12px 24px;
-            border-radius: 5px;
+            background: var(--secondary);
+            color: var(--background);
+            padding: var(--spacing-md) var(--spacing-lg);
+            border-radius: var(--border-radius-md);
             text-decoration: none;
-            font-weight: 500;
-            transition: transform 0.2s;
+            font-weight: var(--font-weight-medium);
+            transition: all var(--transition-normal);
+            box-shadow: var(--shadow-sm);
         }
         
         .login-link:hover {
+            background: var(--secondary-dark);
             transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
         }
         
         .countdown {
-            font-weight: 600;
-            color: #667eea;
+            font-weight: var(--font-weight-semibold);
+            color: var(--primary);
+        }
+        
+        @media (max-width: 480px) {
+            .logout-container {
+                padding: var(--spacing-md);
+            }
+            
+            .logout-box {
+                padding: var(--spacing-lg);
+            }
+            
+            .logout-header h1 {
+                font-size: 24px;
+            }
         }
     </style>
 </head>
@@ -95,7 +107,7 @@
                 Redirecting to login page in <span class="countdown" id="countdown">3</span> seconds...
             </div>
             
-            <a href="/login" class="login-link">Return to Login</a>
+            <a href="/login" class="btn btn-primary login-link">Return to Login</a>
         </div>
     </div>
 
