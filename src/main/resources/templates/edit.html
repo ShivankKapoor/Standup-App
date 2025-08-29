@@ -104,6 +104,24 @@
             box-shadow: 0 0 0 3px var(--primary-light);
         }
         
+        .form-group select {
+            width: 100%;
+            padding: var(--spacing-md);
+            border: 2px solid var(--background-darker);
+            border-radius: var(--border-radius-md);
+            font-size: 14px;
+            line-height: 1.5;
+            transition: border-color var(--transition-normal);
+            color: var(--text);
+            background-color: var(--background);
+        }
+        
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-light);
+        }
+        
         .actions {
             display: flex;
             gap: var(--spacing-md);
@@ -159,6 +177,16 @@
             <div class="date-display" th:text="${date.format(T(java.time.format.DateTimeFormatter).ofPattern('EEEE, MMMM d, yyyy'))}"></div>
             
             <form th:action="@{/save/{date}(date=${date.format(T(java.time.format.DateTimeFormatter).ofPattern('yyyy-MM-dd'))})}" method="post">
+                <div class="form-group">
+                    <label for="dayType">Day Type:</label>
+                    <select id="dayType" name="dayType" class="form-select">
+                        <option value="" th:selected="${dayType == ''}">Regular Day</option>
+                        <option value="PTO" th:selected="${dayType == 'PTO'}">Set PTO</option>
+                        <option value="Planning" th:selected="${dayType == 'Planning'}">Set Planning</option>
+                        <option value="Support" th:selected="${dayType == 'Support'}">Set Support</option>
+                    </select>
+                </div>
+                
                 <div class="form-group">
                     <label for="content">Standup Entry:</label>
                     <textarea id="content" name="content" th:text="${content}" class="form-textarea"

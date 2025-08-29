@@ -193,8 +193,23 @@ public class MainController {
             LocalDate entryDate = LocalDate.parse(date, DATE_FORMATTER);
             String content = standupDataService.getStandup(entryDate);
             
+            String dayType = "";
+            String actualContent = content != null ? content : "";
+            
+            // Check for special day types and extract them
+            if (content != null) {
+                if (content.startsWith("$(PTO)")) {
+                    dayType = "PTO";
+                    actualContent = content.substring(6).trim(); // Remove "$(PTO)" and trim
+                } else if (content.startsWith("$(Planning)")) {
+                    dayType = "Planning";
+                    actualContent = content.substring(11).trim(); // Remove "$(Planning)" and trim
+                }
+            }
+            
             model.addAttribute("date", entryDate);
-            model.addAttribute("content", content != null ? content : "");
+            model.addAttribute("content", actualContent);
+            model.addAttribute("dayType", dayType);
             
             return "edit";
         } catch (DateTimeParseException e) {
@@ -205,6 +220,7 @@ public class MainController {
     @PostMapping("/save/{date}")
     public String saveEntry(@PathVariable String date, 
                            @RequestParam String content,
+                           @RequestParam(required = false) String dayType,
                            HttpServletRequest request) {
         try {
             LocalDate entryDate = LocalDate.parse(date, DATE_FORMATTER);
@@ -213,6 +229,17 @@ public class MainController {
             // Sanitize and limit input
             if (content != null && content.length() > 50000) {
                 content = content.substring(0, 50000);
+            }
+            
+            // Handle special day types
+            if (dayType != null && !dayType.isEmpty()) {
+                if ("PTO".equals(dayType)) {
+                    content = "$(PTO)";
+                } else if ("Planning".equals(dayType)) {
+                    content = "$(Planning)";
+                } else if ("Support".equals(dayType)) {
+                    content = "$(Support)";
+                }
             }
             
             standupDataService.saveStandup(entryDate, content);

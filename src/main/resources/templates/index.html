@@ -208,9 +208,17 @@
             background: var(--secondary);
             border-radius: 50%;
         }
-        
-        .day-cell.today.has-entry::after {
-            background: var(--secondary);
+        /* PTO = purple dot */
+        .day-cell.pto-day::after {
+            background: #a259e6;
+        }
+        /* Planning = green dot */
+        .day-cell.planning-day::after {
+            background: #2ecc40;
+        }
+        /* Support = yellow dot */
+        .day-cell.support-day::after {
+            background: #ffe066;
         }
         
         .day-number {
@@ -381,6 +389,25 @@
             <div class="month-year" th:text="${displayDate.format(T(java.time.format.DateTimeFormatter).ofPattern('MMMM yyyy'))}"></div>
             <a th:href="@{/(month=${displayDate.plusMonths(1).format(T(java.time.format.DateTimeFormatter).ofPattern('yyyy-MM'))})}" class="nav-btn">Next →</a>
         </div>
+        <!-- Color Key Legend -->
+    <div class="calendar-key" style="display: flex; gap: 1rem; justify-content: center; align-items: center; margin: 0.2rem 0 0.1rem 0;">
+            <span style="display: flex; align-items: center; gap: 0.3rem; font-size: 13px;">
+                <span style="width: 10px; height: 10px; background: var(--secondary); border-radius: 50%; display: inline-block;"></span>
+                Regular Entry
+            </span>
+            <span style="display: flex; align-items: center; gap: 0.3rem; font-size: 13px;">
+                <span style="width: 10px; height: 10px; background: #a259e6; border-radius: 50%; display: inline-block;"></span>
+                PTO
+            </span>
+            <span style="display: flex; align-items: center; gap: 0.3rem; font-size: 13px;">
+                <span style="width: 10px; height: 10px; background: #2ecc40; border-radius: 50%; display: inline-block;"></span>
+                Planning
+            </span>
+            <span style="display: flex; align-items: center; gap: 0.3rem; font-size: 13px;">
+                <span style="width: 10px; height: 10px; background: #ffe066; border-radius: 50%; display: inline-block;"></span>
+                Support
+            </span>
+        </div>
         
         <div class="calendar">
             <div class="calendar-grid">
@@ -398,6 +425,7 @@
                      th:data-date="${day.dateString}"
                      onclick="navigateToEntry(this.dataset.date)">
                     <div class="day-number" th:text="${day.dayNumber}"></div>
+                    <!-- Dot color is set by .pto-day or .planning-day class -->
                 </div>
             </div>
         </div>

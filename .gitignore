@@ -35,3 +35,6 @@ build/
 .env
 data/Standups.txt
 logs/*
+
+### Mac ###
+.DS_Store
