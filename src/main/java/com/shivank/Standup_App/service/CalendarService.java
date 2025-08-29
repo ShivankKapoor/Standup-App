@@ -20,12 +20,18 @@ public class CalendarService {
         private boolean isCurrentMonth;
         private boolean isToday;
         private boolean hasEntry;
-        
-        public CalendarDay(LocalDate date, boolean isCurrentMonth, boolean isToday, boolean hasEntry) {
+        private boolean isPTO;
+        private boolean isPlanning;
+        private boolean isSupport;
+
+        public CalendarDay(LocalDate date, boolean isCurrentMonth, boolean isToday, boolean hasEntry, boolean isPTO, boolean isPlanning, boolean isSupport) {
             this.date = date;
             this.isCurrentMonth = isCurrentMonth;
             this.isToday = isToday;
             this.hasEntry = hasEntry;
+            this.isPTO = isPTO;
+            this.isPlanning = isPlanning;
+            this.isSupport = isSupport;
         }
         
         // Getters
@@ -33,6 +39,9 @@ public class CalendarService {
         public boolean isCurrentMonth() { return isCurrentMonth; }
         public boolean isToday() { return isToday; }
         public boolean isHasEntry() { return hasEntry; }
+    public boolean isPTO() { return isPTO; }
+    public boolean isPlanning() { return isPlanning; }
+    public boolean isSupport() { return isSupport; }
         public String getDateString() { return date.format(DATE_FORMATTER); }
         public int getDayNumber() { return date.getDayOfMonth(); }
         
@@ -41,6 +50,9 @@ public class CalendarService {
             if (!isCurrentMonth) classes.append(" other-month");
             if (isToday) classes.append(" today");
             if (hasEntry) classes.append(" has-entry");
+            if (isPTO) classes.append(" pto-day");
+            if (isPlanning) classes.append(" planning-day");
+            if (isSupport) classes.append(" support-day");
             return classes.toString();
         }
     }
@@ -64,9 +76,24 @@ public class CalendarService {
             boolean isCurrentMonth = currentDate.getMonth() == displayDate.getMonth() && 
                                    currentDate.getYear() == displayDate.getYear();
             boolean isToday = currentDate.equals(today);
-            boolean hasEntry = standups.containsKey(currentDate.format(DATE_FORMATTER));
             
-            days.add(new CalendarDay(currentDate, isCurrentMonth, isToday, hasEntry));
+            String dateKey = currentDate.format(DATE_FORMATTER);
+            boolean hasEntry = standups.containsKey(dateKey);
+            boolean isPTO = false;
+            boolean isPlanning = false;
+            boolean isSupport = false;
+
+            // Check for special day types
+            if (hasEntry) {
+                String content = standups.get(dateKey);
+                if (content != null) {
+                    isPTO = content.startsWith("$(PTO)");
+                    isPlanning = content.startsWith("$(Planning)");
+                    isSupport = content.startsWith("$(Support)");
+                }
+            }
+
+            days.add(new CalendarDay(currentDate, isCurrentMonth, isToday, hasEntry, isPTO, isPlanning, isSupport));
         }
         
         return days;
