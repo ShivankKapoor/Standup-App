@@ -72,6 +72,7 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
         return uri.equals("/login") || 
                uri.equals("/logout") || 
                uri.equals("/health") ||
+               uri.startsWith("/api/uptime/") ||
                uri.startsWith("/css/") ||
                uri.startsWith("/js/") ||
                uri.startsWith("/images/") ||
