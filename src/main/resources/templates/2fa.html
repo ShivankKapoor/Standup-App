@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📋 Standup App - 2FA Verification</title>
+    <link rel="stylesheet" th:href="@{/css/theme.css}">
+    <style>
+        body {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            min-height: 100vh;
+        }
+        
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: var(--spacing-lg);
+        }
+        
+        .login-box {
+            background: var(--background);
+            padding: var(--spacing-xxl);
+            border-radius: var(--border-radius-xl);
+            box-shadow: var(--shadow-xl);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            border: 1px solid var(--background-dark);
+        }
+        
+        .login-header {
+            margin-bottom: var(--spacing-xl);
+        }
+        
+        .login-header h1 {
+            font-size: 28px;
+            margin-bottom: var(--spacing-md);
+            color: var(--text);
+            font-weight: var(--font-weight-bold);
+        }
+        
+        .login-header p {
+            color: var(--text-light);
+            font-size: 16px;
+        }
+        
+        .login-form {
+            text-align: left;
+        }
+        
+        .submit-btn {
+            width: 100%;
+            font-size: 16px;
+            padding: var(--spacing-md);
+            margin-top: var(--spacing-md);
+        }
+        
+        .form-footer {
+            margin-top: var(--spacing-xl);
+            padding-top: var(--spacing-lg);
+            border-top: 1px solid var(--background-dark);
+            text-align: center;
+        }
+        
+        .form-footer p {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+        
+        .form-footer a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+        
+        .form-footer a:hover {
+            text-decoration: underline;
+        }
+        
+        .code-input {
+            text-align: center;
+            font-size: 24px;
+            letter-spacing: 4px;
+            font-family: monospace;
+        }
+        
+        @media (max-width: 480px) {
+            .login-container {
+                padding: var(--spacing-md);
+            }
+            
+            .login-box {
+                padding: var(--spacing-lg);
+            }
+            
+            .login-header h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-box">
+            <div class="login-header">
+                <h1>🔐 Two-Factor Authentication</h1>
+                <p>Enter the 6-digit code from Google Authenticator</p>
+            </div>
+            
+            <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+            
+            <form method="POST" action="/2fa" class="login-form">
+                <div class="form-group">
+                    <label for="code" class="form-label">Authentication Code</label>
+                    <input type="text" id="code" name="code" class="form-input code-input" 
+                           placeholder="000000" maxlength="6" required autofocus
+                           inputmode="numeric" pattern="[0-9]{6}">
+                </div>
+                
+                <button type="submit" class="btn btn-secondary submit-btn">Verify</button>
+            </form>
+            
+            <div class="form-footer">
+                <p><a href="/login">Back to login</a></p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
