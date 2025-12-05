@@ -45,7 +45,9 @@ public class LoggingService {
         logToFile("logs/security.log", message);
         
         // Send security events to Discord with rich formatting
-        if (event.contains("LOGIN_FAILED") || event.contains("ACCOUNT_LOCKED") || event.contains("BRUTE_FORCE")) {
+        if (event.contains("2FA_FAILED")) {
+            sendDiscordNotification(create2FAFailedEmbed(details));
+        } else if (event.contains("LOGIN_FAILED") || event.contains("ACCOUNT_LOCKED") || event.contains("BRUTE_FORCE")) {
             sendDiscordNotification(createSecurityAlertEmbed(event, details, true));
         } else if (event.contains("LOGIN_SUCCESS")) {
             sendDiscordNotification(createSecurityAlertEmbed(event, details, false));
@@ -102,6 +104,88 @@ public class LoggingService {
             System.err.println("❌ Failed to send Discord notification: " + e.getMessage());
             e.printStackTrace();
         }
+    }
+    
+    private Map<String, Object> create2FAFailedEmbed(String details) {
+        Map<String, Object> payload = new HashMap<>();
+        Map<String, Object> embed = new HashMap<>();
+        Map<String, Object> author = new HashMap<>();
+        
+        // Parse details to extract IP and username
+        String ip = extractFromDetails(details, "IP: ");
+        String username = extractFromDetails(details, "User: ");
+        ZonedDateTime cstTime = ZonedDateTime.now(CST_ZONE);
+        String timestamp = cstTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + " CST";
+        
+        // Set author
+        author.put("name", "Standup App Security Alert");
+        author.put("icon_url", "https://cdn-icons-png.flaticon.com/512/2317/2317988.png");
+        embed.put("author", author);
+        
+        // Set color (orange for warning)
+        embed.put("color", 16744192); // Orange color
+        embed.put("title", "⚠️ 2FA Verification Failed");
+        embed.put("description", "User passed password authentication but failed 2FA verification");
+        
+        // Add fields
+        java.util.List<Map<String, Object>> fields = new java.util.ArrayList<>();
+        
+        // Status field
+        Map<String, Object> statusField = new HashMap<>();
+        statusField.put("name", "🔐 Status");
+        statusField.put("value", "Password ✅ | 2FA Code ❌");
+        statusField.put("inline", false);
+        fields.add(statusField);
+        
+        // IP Address field
+        Map<String, Object> ipField = new HashMap<>();
+        ipField.put("name", "🌐 IP Address");
+        ipField.put("value", ip != null ? ip : "Unknown");
+        ipField.put("inline", true);
+        fields.add(ipField);
+        
+        // Username field
+        Map<String, Object> userField = new HashMap<>();
+        userField.put("name", "👤 Username");
+        userField.put("value", username != null ? username : "Unknown");
+        userField.put("inline", true);
+        fields.add(userField);
+        
+        // Time field
+        Map<String, Object> timeField = new HashMap<>();
+        timeField.put("name", "🕐 Time");
+        timeField.put("value", timestamp);
+        timeField.put("inline", true);
+        fields.add(timeField);
+        
+        // Action field
+        Map<String, Object> actionField = new HashMap<>();
+        actionField.put("name", "🔒 Action");
+        actionField.put("value", "Access denied - Invalid 2FA code");
+        actionField.put("inline", false);
+        fields.add(actionField);
+        
+        // Warning field
+        Map<String, Object> warningField = new HashMap<>();
+        warningField.put("name", "⚠️ Warning");
+        warningField.put("value", "User has valid credentials but failed multi-factor authentication. Monitor for suspicious activity.");
+        warningField.put("inline", false);
+        fields.add(warningField);
+        
+        embed.put("fields", fields);
+        
+        // Set footer
+        Map<String, Object> footer = new HashMap<>();
+        footer.put("text", "Standup App Security Alert • " + cstTime.format(DateTimeFormatter.ofPattern("MMM dd 'at' h:mm a")) + " CST");
+        embed.put("footer", footer);
+        
+        // Set timestamp
+        embed.put("timestamp", cstTime.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
+        
+        payload.put("username", "Standup Bot");
+        payload.put("embeds", java.util.Arrays.asList(embed));
+        
+        return payload;
     }
     
     private Map<String, Object> createSecurityAlertEmbed(String event, String details, boolean isAlert) {

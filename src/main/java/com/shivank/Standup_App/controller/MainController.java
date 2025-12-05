@@ -6,6 +6,7 @@ import com.shivank.Standup_App.service.LoggingService;
 import com.shivank.Standup_App.service.RateLimitService;
 import com.shivank.Standup_App.service.SessionService;
 import com.shivank.Standup_App.service.StandupDataService;
+import com.shivank.Standup_App.service.TwoFactorService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -42,6 +43,9 @@ public class MainController {
     
     @Autowired
     private IpAddressService ipAddressService;
+    
+    @Autowired
+    private TwoFactorService twoFactorService;
     
     @Value("${auth.username}")
     private String authUsername;
@@ -127,25 +131,67 @@ public class MainController {
             return "login";
         }
         
-        // Create session token
-        String sessionToken = sessionService.createSessionToken(username);
+        // Credentials are valid, redirect to 2FA verification
+        // Store the username in the session for 2FA step
+        request.getSession().setAttribute("2fa_pending_user", username);
+        loggingService.logAppEvent("User " + username + " from IP " + ip + " passed credentials, awaiting 2FA");
         
-        // Set cookie with proxy-aware domain settings
+        return "redirect:/2fa";
+    }
+    
+    @GetMapping("/2fa")
+    public String verify2fa(@RequestParam(value = "error", required = false) String error, 
+                           HttpServletRequest request,
+                           Model model) {
+        // Check if user has passed credentials
+        String pendingUser = (String) request.getSession().getAttribute("2fa_pending_user");
+        if (pendingUser == null) {
+            return "redirect:/login";
+        }
+        
+        if (error != null) {
+            model.addAttribute("error", "Invalid 2FA code. Please try again.");
+        }
+        
+        return "2fa";
+    }
+    
+    @PostMapping("/2fa")
+    public String verify2faPost(@RequestParam String code,
+                               HttpServletRequest request,
+                               HttpServletResponse response,
+                               Model model) {
+        
+        String pendingUser = (String) request.getSession().getAttribute("2fa_pending_user");
+        if (pendingUser == null) {
+            return "redirect:/login";
+        }
+        
+        String ip = ipAddressService.getClientIpAddress(request);
+        
+        // Validate 2FA code
+        if (!twoFactorService.validateCode(code)) {
+            loggingService.logSecurityEvent("2FA_FAILED", 
+                    "IP: " + ip + " - User: " + pendingUser + " failed 2FA verification");
+            return "redirect:/2fa?error=true";
+        }
+        
+        // 2FA passed, create session token
+        String sessionToken = sessionService.createSessionToken(pendingUser);
+        
+        // Set cookie
         Cookie cookie = new Cookie("session_token", sessionToken);
         cookie.setMaxAge(8 * 3600); // 8 hours
         cookie.setHttpOnly(true);
         cookie.setPath("/");
-        
-        // For Cloudflare Tunnel: don't set Secure flag as it's HTTP to container
-        // Cloudflare handles HTTPS termination
         cookie.setSecure(false);
-        
-        // Set SameSite for better security with proxies
-        // Note: This might need to be handled in application.properties instead
         response.addCookie(cookie);
         
+        // Clear the pending 2FA user from session
+        request.getSession().removeAttribute("2fa_pending_user");
+        
         loggingService.logSecurityEvent("LOGIN_SUCCESS", 
-                "IP: " + ip + " - User: " + username + " logged in successfully");
+                "IP: " + ip + " - User: " + pendingUser + " logged in successfully (2FA verified)");
         
         return "redirect:/";
     }
