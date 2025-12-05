@@ -134,8 +134,7 @@ public class MainController {
         // Credentials are valid, redirect to 2FA verification
         // Store the username in the session for 2FA step
         request.getSession().setAttribute("2fa_pending_user", username);
-        loggingService.logSecurityEvent("LOGIN_CREDENTIALS_VALID", 
-                "IP: " + ip + " - User: " + username + " passed credentials, awaiting 2FA");
+        loggingService.logAppEvent("User " + username + " from IP " + ip + " passed credentials, awaiting 2FA");
         
         return "redirect:/2fa";
     }
