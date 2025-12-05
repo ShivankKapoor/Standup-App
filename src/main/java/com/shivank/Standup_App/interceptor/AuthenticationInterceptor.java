@@ -71,6 +71,7 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
     private boolean isPublicEndpoint(String uri) {
         return uri.equals("/login") || 
                uri.equals("/logout") || 
+               uri.equals("/2fa") ||
                uri.equals("/health") ||
                uri.startsWith("/api/uptime/") ||
                uri.startsWith("/css/") ||
