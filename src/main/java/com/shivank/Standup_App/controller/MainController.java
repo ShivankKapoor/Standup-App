@@ -133,8 +133,15 @@ public class MainController {
         
         // Credentials are valid, redirect to 2FA verification
         // Store the username in the session for 2FA step
-        request.getSession().setAttribute("2fa_pending_user", username);
-        loggingService.logAppEvent("User " + username + " from IP " + ip + " passed credentials, awaiting 2FA");
+        // Force session creation and ensure it's persisted before redirect
+        var session = request.getSession(true);
+        session.setAttribute("2fa_pending_user", username);
+        
+        // Ensure session is created and ID is set before redirect
+        // This forces Tomcat to commit the session cookie
+        String sessionId = session.getId();
+        
+        loggingService.logAppEvent("User " + username + " from IP " + ip + " passed credentials (session: " + sessionId + "), awaiting 2FA");
         
         return "redirect:/2fa";
     }
@@ -144,8 +151,19 @@ public class MainController {
                            HttpServletRequest request,
                            Model model) {
         // Check if user has passed credentials
-        String pendingUser = (String) request.getSession().getAttribute("2fa_pending_user");
+        // Use getSession(false) to retrieve existing session without creating a new one
+        var session = request.getSession(false);
+        
+        if (session == null) {
+            loggingService.logSecurityEvent("2FA_NO_SESSION", 
+                    "IP: " + ipAddressService.getClientIpAddress(request) + " - Attempted to access 2FA without session");
+            return "redirect:/login";
+        }
+        
+        String pendingUser = (String) session.getAttribute("2fa_pending_user");
         if (pendingUser == null) {
+            loggingService.logSecurityEvent("2FA_NO_PENDING_USER", 
+                    "IP: " + ipAddressService.getClientIpAddress(request) + " - Session exists but no pending user");
             return "redirect:/login";
         }
         
@@ -162,7 +180,12 @@ public class MainController {
                                HttpServletResponse response,
                                Model model) {
         
-        String pendingUser = (String) request.getSession().getAttribute("2fa_pending_user");
+        var session = request.getSession(false);
+        if (session == null) {
+            return "redirect:/login";
+        }
+        
+        String pendingUser = (String) session.getAttribute("2fa_pending_user");
         if (pendingUser == null) {
             return "redirect:/login";
         }
