@@ -78,11 +78,82 @@
             text-decoration: underline;
         }
         
-        .code-input {
+        .code-inputs-container {
+            display: flex;
+            gap: var(--spacing-md);
+            justify-content: center;
+            margin: var(--spacing-lg) 0;
+        }
+        
+        .code-box {
+            width: 50px;
+            height: 60px;
             text-align: center;
-            font-size: 24px;
-            letter-spacing: 4px;
+            font-size: 32px;
+            font-weight: var(--font-weight-bold);
             font-family: monospace;
+            border: 2px solid var(--background-dark);
+            border-radius: var(--border-radius);
+            background: var(--background-light);
+            color: var(--text);
+            transition: all 0.2s ease;
+        }
+        
+        .code-box:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: var(--background);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        .code-box::-webkit-outer-spin-button,
+        .code-box::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        
+        .code-box[type=number] {
+            -moz-appearance: textfield;
+        }
+        
+        .submit-btn {
+            width: 100%;
+            font-size: 16px;
+            padding: var(--spacing-md);
+            margin-top: var(--spacing-md);
+            transition: all 0.3s ease;
+        }
+        
+        .submit-btn.highlight {
+            animation: pulse 0.5s ease-in-out;
+            background: var(--accent);
+            transform: scale(1.02);
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .form-footer {
+            margin-top: var(--spacing-xl);
+            padding-top: var(--spacing-lg);
+            border-top: 1px solid var(--background-dark);
+            text-align: center;
+        }
+        
+        .form-footer p {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+        
+        .form-footer a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+        
+        .form-footer a:hover {
+            text-decoration: underline;
         }
         
         @media (max-width: 480px) {
@@ -95,6 +166,16 @@
             }
             
             .login-header h1 {
+                font-size: 24px;
+            }
+            
+            .code-inputs-container {
+                gap: var(--spacing-sm);
+            }
+            
+            .code-box {
+                width: 40px;
+                height: 50px;
                 font-size: 24px;
             }
         }
@@ -110,15 +191,21 @@
             
             <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
             
-            <form method="POST" action="/2fa" class="login-form">
+            <form method="POST" action="/2fa" class="login-form" id="twoFactorForm">
                 <div class="form-group">
-                    <label for="code" class="form-label">Authentication Code</label>
-                    <input type="text" id="code" name="code" class="form-input code-input" 
-                           placeholder="000000" maxlength="6" required autofocus
-                           inputmode="numeric" pattern="[0-9]{6}">
+                    <label class="form-label">Authentication Code</label>
+                    <div class="code-inputs-container">
+                        <input type="number" class="code-box" maxlength="1" min="0" max="9" pattern="\d" inputmode="numeric" required autofocus data-index="0">
+                        <input type="number" class="code-box" maxlength="1" min="0" max="9" pattern="\d" inputmode="numeric" required data-index="1">
+                        <input type="number" class="code-box" maxlength="1" min="0" max="9" pattern="\d" inputmode="numeric" required data-index="2">
+                        <input type="number" class="code-box" maxlength="1" min="0" max="9" pattern="\d" inputmode="numeric" required data-index="3">
+                        <input type="number" class="code-box" maxlength="1" min="0" max="9" pattern="\d" inputmode="numeric" required data-index="4">
+                        <input type="number" class="code-box" maxlength="1" min="0" max="9" pattern="\d" inputmode="numeric" required data-index="5">
+                    </div>
+                    <input type="hidden" id="code" name="code" required>
                 </div>
                 
-                <button type="submit" class="btn btn-secondary submit-btn">Verify</button>
+                <button type="submit" class="btn btn-secondary submit-btn" id="submitBtn">Verify</button>
             </form>
             
             <div class="form-footer">
@@ -126,5 +213,142 @@
             </div>
         </div>
     </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('twoFactorForm');
+            const boxes = document.querySelectorAll('.code-box');
+            const hiddenInput = document.getElementById('code');
+            const submitBtn = document.getElementById('submitBtn');
+            
+            // Auto-focus first box
+            boxes[0].focus();
+            
+            function updateHiddenInput() {
+                const code = Array.from(boxes).map(box => box.value).join('');
+                hiddenInput.value = code;
+                
+                // Highlight submit button when all 6 digits are entered
+                if (code.length === 6) {
+                    submitBtn.classList.add('highlight');
+                    submitBtn.focus();
+                } else {
+                    submitBtn.classList.remove('highlight');
+                }
+                
+                return code;
+            }
+            
+            boxes.forEach((box, index) => {
+                // Handle input
+                box.addEventListener('input', function(e) {
+                    // Only allow single digit
+                    if (this.value.length > 1) {
+                        this.value = this.value.slice(0, 1);
+                    }
+                    
+                    updateHiddenInput();
+                    
+                    // Move to next box if value entered
+                    if (this.value && index < boxes.length - 1) {
+                        boxes[index + 1].focus();
+                    }
+                });
+                
+                // Handle keydown for special keys
+                box.addEventListener('keydown', function(e) {
+                    // Backspace handling
+                    if (e.key === 'Backspace') {
+                        e.preventDefault(); // Prevent default to control behavior
+                        
+                        if (this.value) {
+                            // If current box has value, clear it
+                            this.value = '';
+                        } else if (index > 0) {
+                            // If current box is empty, move to previous and clear it
+                            boxes[index - 1].focus();
+                            boxes[index - 1].value = '';
+                        }
+                        
+                        updateHiddenInput();
+                    }
+                    
+                    // Delete key - clear current box
+                    if (e.key === 'Delete') {
+                        e.preventDefault();
+                        this.value = '';
+                        updateHiddenInput();
+                    }
+                    
+                    // Left arrow - move to previous box
+                    if (e.key === 'ArrowLeft' && index > 0) {
+                        e.preventDefault();
+                        boxes[index - 1].focus();
+                    }
+                    
+                    // Right arrow - move to next box
+                    if (e.key === 'ArrowRight' && index < boxes.length - 1) {
+                        e.preventDefault();
+                        boxes[index + 1].focus();
+                    }
+                    
+                    // Enter - submit form if all digits entered
+                    if (e.key === 'Enter') {
+                        const code = updateHiddenInput();
+                        if (code.length === 6) {
+                            form.submit();
+                        }
+                    }
+                    
+                    // Prevent non-numeric input
+                    if (e.key.length === 1 && !/[0-9]/.test(e.key) && e.key !== 'Backspace' && e.key !== 'Tab' && e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') {
+                        e.preventDefault();
+                    }
+                });
+                
+                // Handle paste
+                box.addEventListener('paste', function(e) {
+                    e.preventDefault();
+                    const pastedData = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+                    
+                    pastedData.split('').forEach((digit, i) => {
+                        if (index + i < boxes.length) {
+                            boxes[index + i].value = digit;
+                        }
+                    });
+                    
+                    // Focus the next empty box or last box
+                    const nextIndex = Math.min(index + pastedData.length, boxes.length - 1);
+                    boxes[nextIndex].focus();
+                    
+                    updateHiddenInput();
+                });
+                
+                // Select all on focus for easy replacement
+                box.addEventListener('focus', function() {
+                    this.select();
+                });
+            });
+            
+            // Handle backspace on submit button - go back to last box and clear it
+            submitBtn.addEventListener('keydown', function(e) {
+                if (e.key === 'Backspace') {
+                    e.preventDefault();
+                    boxes[5].focus();
+                    boxes[5].value = '';
+                    updateHiddenInput();
+                }
+            });
+            
+            // Prevent form submission if code is incomplete
+            form.addEventListener('submit', function(e) {
+                const code = updateHiddenInput();
+                if (code.length !== 6) {
+                    e.preventDefault();
+                    boxes[0].focus();
+                }
+            });
+        });
+    </script>
 </body>
 </html>
