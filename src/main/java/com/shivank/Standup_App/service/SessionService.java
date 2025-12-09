@@ -112,11 +112,14 @@ public class SessionService {
         }
     }
     
-    public void cleanupExpiredSessions() {
+    public int cleanupExpiredSessions() {
         long currentTime = Instant.now().getEpochSecond();
+        int beforeSize = activeSessions.size();
         activeSessions.entrySet().removeIf(entry -> 
             currentTime - entry.getValue() > sessionTimeoutSeconds
         );
+        int afterSize = activeSessions.size();
+        return beforeSize - afterSize;
     }
     
     public long getSessionTimeoutSeconds() {

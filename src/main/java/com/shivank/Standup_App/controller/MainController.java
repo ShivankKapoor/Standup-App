@@ -4,6 +4,7 @@ import com.shivank.Standup_App.service.CalendarService;
 import com.shivank.Standup_App.service.IpAddressService;
 import com.shivank.Standup_App.service.LoggingService;
 import com.shivank.Standup_App.service.RateLimitService;
+import com.shivank.Standup_App.service.ScheduledTaskService;
 import com.shivank.Standup_App.service.SessionService;
 import com.shivank.Standup_App.service.StandupDataService;
 import com.shivank.Standup_App.service.TwoFactorService;
@@ -47,6 +48,9 @@ public class MainController {
     @Autowired
     private TwoFactorService twoFactorService;
     
+    @Autowired
+    private ScheduledTaskService scheduledTaskService;
+    
     @Value("${auth.username}")
     private String authUsername;
     
@@ -61,6 +65,25 @@ public class MainController {
     @ResponseBody
     public String debugAuth() {
         return "Username: '" + authUsername + "', Password: '" + authPassword + "'";
+    }
+    
+    // Manual trigger for session cleanup (for testing)
+    @GetMapping("/admin/cleanup-sessions")
+    @ResponseBody
+    public String manualSessionCleanup(HttpServletRequest request, HttpServletResponse response) {
+        String ip = ipAddressService.getClientIpAddress(request);
+        
+        // Check rate limit
+        if (!rateLimitService.checkAdminCleanupRateLimit(request)) {
+            loggingService.logRateLimitViolation(ip, "ADMIN_CLEANUP", 
+                    "Exceeded 5 cleanup requests per hour");
+            response.setStatus(429);
+            return "Rate limit exceeded. Maximum 5 cleanup requests per hour.";
+        }
+        
+        scheduledTaskService.cleanupExpiredSessions();
+        loggingService.logSecurityEvent("MANUAL_CLEANUP", "IP: " + ip + " - Manual session cleanup triggered");
+        return "Session cleanup triggered manually";
     }
     
     @GetMapping("/")
