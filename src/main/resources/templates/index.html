@@ -517,6 +517,12 @@
         function navigateToEntry(dateString) {
             window.location.href = '/entry/' + dateString;
         }
+        
+        // Auto-logout timer
+        const sessionTimeout = /*[[${sessionTimeout}]]*/ 900; // Default to 15 minutes
+        setTimeout(function() {
+            window.location.href = '/logout';
+        }, sessionTimeout * 1000); // Convert seconds to milliseconds
     </script>
 </body>
 </html>

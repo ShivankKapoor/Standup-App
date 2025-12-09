@@ -86,6 +86,7 @@ public class MainController {
         model.addAttribute("displayDate", displayDate);
         model.addAttribute("calendarDays", calendarDays);
         model.addAttribute("today", LocalDate.now(CST_ZONE));
+        model.addAttribute("sessionTimeout", sessionService.getSessionTimeoutSeconds());
         
         return "index";
     }
@@ -224,6 +225,12 @@ public class MainController {
         String currentUser = (String) request.getAttribute("currentUser");
         String ip = ipAddressService.getClientIpAddress(request);
         
+        // Get and invalidate session token
+        String sessionToken = getSessionTokenFromCookies(request);
+        if (sessionToken != null) {
+            sessionService.invalidateSession(sessionToken);
+        }
+        
         // Clear session cookie with same settings as when it was set
         Cookie cookie = new Cookie("session_token", "");
         cookie.setMaxAge(0);
@@ -240,6 +247,18 @@ public class MainController {
         return "logout";
     }
     
+    private String getSessionTokenFromCookies(HttpServletRequest request) {
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if ("session_token".equals(cookie.getName())) {
+                    return cookie.getValue();
+                }
+            }
+        }
+        return null;
+    }
+    
     @GetMapping("/entry/{date}")
     public String viewEntry(@PathVariable String date, Model model, HttpServletRequest request) {
         try {
@@ -249,6 +268,7 @@ public class MainController {
             model.addAttribute("date", entryDate);
             model.addAttribute("content", content);
             model.addAttribute("hasContent", content != null && !content.trim().isEmpty());
+            model.addAttribute("sessionTimeout", sessionService.getSessionTimeoutSeconds());
             
             return "entry";
         } catch (DateTimeParseException e) {
@@ -279,6 +299,7 @@ public class MainController {
             model.addAttribute("date", entryDate);
             model.addAttribute("content", actualContent);
             model.addAttribute("dayType", dayType);
+            model.addAttribute("sessionTimeout", sessionService.getSessionTimeoutSeconds());
             
             return "edit";
         } catch (DateTimeParseException e) {
