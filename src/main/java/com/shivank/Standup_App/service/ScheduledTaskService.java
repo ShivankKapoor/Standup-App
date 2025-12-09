@@ -26,6 +26,22 @@ public class ScheduledTaskService {
 
     @Autowired
     private DiscordService discordService;
+    
+    @Autowired
+    private SessionService sessionService;
+
+    /**
+     * Runs every day at 12:00 AM CST to clean up expired session tokens
+     */
+    @Scheduled(cron = "0 0 0 * * ?", zone = "America/Chicago")
+    public void cleanupExpiredSessions() {
+        try {
+            sessionService.cleanupExpiredSessions();
+            logger.info("Cleaned up expired session tokens");
+        } catch (Exception e) {
+            logger.severe("Error cleaning up expired sessions: " + e.getMessage());
+        }
+    }
 
     /**
      * Runs every day at 7 PM CST (1 AM UTC the next day)
