@@ -73,6 +73,7 @@ public class AuthenticationInterceptor implements HandlerInterceptor {
                uri.equals("/logout") || 
                uri.equals("/2fa") ||
                uri.equals("/health") ||
+               uri.equals("/admin/cleanup-sessions") ||
                uri.startsWith("/api/uptime/") ||
                uri.startsWith("/css/") ||
                uri.startsWith("/js/") ||
