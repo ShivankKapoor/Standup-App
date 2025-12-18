@@ -4,6 +4,7 @@ import com.shivank.Standup_App.service.CalendarService;
 import com.shivank.Standup_App.service.IpAddressService;
 import com.shivank.Standup_App.service.LoggingService;
 import com.shivank.Standup_App.service.RateLimitService;
+import com.shivank.Standup_App.service.ScheduledTaskService;
 import com.shivank.Standup_App.service.SessionService;
 import com.shivank.Standup_App.service.StandupDataService;
 import com.shivank.Standup_App.service.TwoFactorService;
@@ -47,6 +48,9 @@ public class MainController {
     @Autowired
     private TwoFactorService twoFactorService;
     
+    @Autowired
+    private ScheduledTaskService scheduledTaskService;
+    
     @Value("${auth.username}")
     private String authUsername;
     
@@ -61,6 +65,25 @@ public class MainController {
     @ResponseBody
     public String debugAuth() {
         return "Username: '" + authUsername + "', Password: '" + authPassword + "'";
+    }
+    
+    // Manual trigger for session cleanup (for testing)
+    @GetMapping("/admin/cleanup-sessions")
+    @ResponseBody
+    public String manualSessionCleanup(HttpServletRequest request, HttpServletResponse response) {
+        String ip = ipAddressService.getClientIpAddress(request);
+        
+        // Check rate limit
+        if (!rateLimitService.checkAdminCleanupRateLimit(request)) {
+            loggingService.logRateLimitViolation(ip, "ADMIN_CLEANUP", 
+                    "Exceeded 5 cleanup requests per hour");
+            response.setStatus(429);
+            return "Rate limit exceeded. Maximum 5 cleanup requests per hour.";
+        }
+        
+        scheduledTaskService.cleanupExpiredSessions();
+        loggingService.logSecurityEvent("MANUAL_CLEANUP", "IP: " + ip + " - Manual session cleanup triggered");
+        return "Session cleanup triggered manually";
     }
     
     @GetMapping("/")
@@ -86,6 +109,7 @@ public class MainController {
         model.addAttribute("displayDate", displayDate);
         model.addAttribute("calendarDays", calendarDays);
         model.addAttribute("today", LocalDate.now(CST_ZONE));
+        model.addAttribute("sessionTimeout", sessionService.getSessionTimeoutSeconds());
         
         return "index";
     }
@@ -224,6 +248,12 @@ public class MainController {
         String currentUser = (String) request.getAttribute("currentUser");
         String ip = ipAddressService.getClientIpAddress(request);
         
+        // Get and invalidate session token
+        String sessionToken = getSessionTokenFromCookies(request);
+        if (sessionToken != null) {
+            sessionService.invalidateSession(sessionToken);
+        }
+        
         // Clear session cookie with same settings as when it was set
         Cookie cookie = new Cookie("session_token", "");
         cookie.setMaxAge(0);
@@ -240,6 +270,18 @@ public class MainController {
         return "logout";
     }
     
+    private String getSessionTokenFromCookies(HttpServletRequest request) {
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if ("session_token".equals(cookie.getName())) {
+                    return cookie.getValue();
+                }
+            }
+        }
+        return null;
+    }
+    
     @GetMapping("/entry/{date}")
     public String viewEntry(@PathVariable String date, Model model, HttpServletRequest request) {
         try {
@@ -249,6 +291,7 @@ public class MainController {
             model.addAttribute("date", entryDate);
             model.addAttribute("content", content);
             model.addAttribute("hasContent", content != null && !content.trim().isEmpty());
+            model.addAttribute("sessionTimeout", sessionService.getSessionTimeoutSeconds());
             
             return "entry";
         } catch (DateTimeParseException e) {
@@ -279,6 +322,7 @@ public class MainController {
             model.addAttribute("date", entryDate);
             model.addAttribute("content", actualContent);
             model.addAttribute("dayType", dayType);
+            model.addAttribute("sessionTimeout", sessionService.getSessionTimeoutSeconds());
             
             return "edit";
         } catch (DateTimeParseException e) {
