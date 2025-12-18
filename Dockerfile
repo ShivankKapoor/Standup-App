@@ -16,8 +16,8 @@ RUN mvn clean package -DskipTests
 # --------- Run stage ---------
 FROM amazoncorretto:17-alpine
 
-# Install curl for health checks
-RUN apk add --no-cache curl
+# Install curl for health checks and tzdata for timezone support
+RUN apk add --no-cache curl tzdata
 
 WORKDIR /app
 

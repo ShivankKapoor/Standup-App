@@ -26,6 +26,81 @@ public class ScheduledTaskService {
 
     @Autowired
     private DiscordService discordService;
+    
+    @Autowired
+    private SessionService sessionService;
+
+    /**
+     * Runs every day at 12:00 AM CST to clean up expired session tokens
+     */
+    @Scheduled(cron = "0 0 0 * * ?", zone = "America/Chicago")
+    public void cleanupExpiredSessions() {
+        try {
+            int removedCount = sessionService.cleanupExpiredSessions();
+            logger.info("Cleaned up " + removedCount + " expired session tokens");
+            
+            // Always send Discord notification
+            sendSessionCleanupNotification(removedCount);
+        } catch (Exception e) {
+            logger.severe("Error cleaning up expired sessions: " + e.getMessage());
+        }
+    }
+    
+    private void sendSessionCleanupNotification(int removedCount) {
+        try {
+            Map<String, Object> embed = new HashMap<>();
+            Map<String, Object> author = new HashMap<>();
+            
+            ZonedDateTime cstTime = ZonedDateTime.now(ZoneId.of("America/Chicago"));
+            
+            // Set author
+            author.put("name", "Standup App Session Maintenance");
+            author.put("icon_url", "https://cdn-icons-png.flaticon.com/512/2317/2317988.png");
+            embed.put("author", author);
+            
+            // Set color (green for success) and title
+            embed.put("color", 5763719); // Green color
+            embed.put("title", "🧹 Session Cleanup Complete");
+            embed.put("description", "Daily session cleanup task executed successfully");
+            
+            // Add fields
+            List<Map<String, Object>> fields = new ArrayList<>();
+            
+            // Removed sessions field
+            Map<String, Object> removedField = new HashMap<>();
+            removedField.put("name", "🗑️ Sessions Removed");
+            removedField.put("value", String.valueOf(removedCount));
+            removedField.put("inline", true);
+            fields.add(removedField);
+            
+            // Status field
+            Map<String, Object> statusField = new HashMap<>();
+            statusField.put("name", "✅ Status");
+            statusField.put("value", "SUCCESS");
+            statusField.put("inline", true);
+            fields.add(statusField);
+            
+            embed.put("fields", fields);
+            
+            // Set footer
+            Map<String, Object> footer = new HashMap<>();
+            footer.put("text", "Standup App Maintenance • " + cstTime.format(DateTimeFormatter.ofPattern("MMM dd 'at' h:mm a")) + " CST");
+            embed.put("footer", footer);
+            
+            // Set timestamp
+            embed.put("timestamp", cstTime.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
+            
+            // Create payload
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("username", "Standup Bot");
+            payload.put("embeds", Arrays.asList(embed));
+            
+            discordService.sendDiscordEmbed(payload);
+            logger.info("Discord notification sent for session cleanup");
+        } catch (Exception e) {
+            logger.warning("Failed to send Discord notification for session cleanup: " + e.getMessage());
+        }
+    }
 
     /**
      * Runs every day at 7 PM CST (1 AM UTC the next day)

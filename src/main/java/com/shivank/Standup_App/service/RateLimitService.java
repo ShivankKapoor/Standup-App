@@ -98,6 +98,16 @@ public class RateLimitService {
         return attempts.canAttempt(20, 3600);
     }
     
+    /**
+     * Check admin cleanup endpoint rate limit
+     * 5 requests per hour per IP
+     */
+    public boolean checkAdminCleanupRateLimit(HttpServletRequest request) {
+        String realIpAddress = ipAddressService.getClientIpAddress(request);
+        AttemptInfo attempts = healthCheckRequests.computeIfAbsent(realIpAddress + "_cleanup", k -> new AttemptInfo());
+        return attempts.canAttempt(5, 3600);
+    }
+    
     public int getAuthenticationAttempts(String ipAddress) {
         AttemptInfo attempts = authAttempts.get(ipAddress);
         return attempts != null ? attempts.getCurrentCount() : 0;
