@@ -18,6 +18,36 @@
             top: var(--spacing-md);
             right: var(--spacing-md);
             z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: var(--spacing-xs);
+        }
+        
+        .session-timer {
+            font-size: 12px;
+            color: var(--background);
+            background: rgba(255, 255, 255, 0.15);
+            padding: var(--spacing-xs) var(--spacing-sm);
+            border-radius: var(--border-radius-sm);
+            font-family: var(--font-family-mono);
+            backdrop-filter: blur(10px);
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .session-timer.warning {
+            background: rgba(255, 193, 7, 0.3);
+            animation: pulse 1s infinite;
+        }
+        
+        .session-timer.critical {
+            background: rgba(220, 53, 69, 0.3);
+            animation: pulse 0.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
         }
         
         .logout-btn {
@@ -372,6 +402,7 @@
 </head>
 <body>
     <div class="logout-container">
+        <div class="session-timer" id="session-timer">Session: 15:00</div>
         <a href="/logout" class="logout-btn" id="logout-btn">🚪 Logout</a>
     </div>
 
@@ -431,7 +462,7 @@
         </div>
     </div>
 
-    <script>
+    <script th:inline="javascript">
         const logoutBtn = document.getElementById('logout-btn');
         if (logoutBtn) {
             logoutBtn.addEventListener('click', function(e) {
@@ -518,11 +549,37 @@
             window.location.href = '/entry/' + dateString;
         }
         
-        // Auto-logout timer
-        const sessionTimeout = /*[[${sessionTimeout}]]*/ 900; // Default to 15 minutes
-        setTimeout(function() {
-            window.location.href = '/logout';
-        }, sessionTimeout * 1000); // Convert seconds to milliseconds
+        // Session countdown timer - value calculated by backend
+        const sessionTimeout = [[${sessionTimeout}]];
+        const sessionTimerElement = document.getElementById('session-timer');
+        let remainingSeconds = sessionTimeout;
+        console.log('Session timer initialized with', remainingSeconds, 'seconds remaining');
+        
+        function updateSessionTimer() {
+            const minutes = Math.floor(remainingSeconds / 60);
+            const seconds = remainingSeconds % 60;
+            const timeString = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            sessionTimerElement.textContent = `Session: ${timeString}`;
+            
+            // Visual warnings
+            if (remainingSeconds <= 60) {
+                sessionTimerElement.classList.add('critical');
+                sessionTimerElement.classList.remove('warning');
+            } else if (remainingSeconds <= 180) {
+                sessionTimerElement.classList.add('warning');
+                sessionTimerElement.classList.remove('critical');
+            }
+            
+            remainingSeconds--;
+            
+            if (remainingSeconds < 0) {
+                window.location.href = '/logout';
+            }
+        }
+        
+        // Update session timer every second
+        updateSessionTimer();
+        setInterval(updateSessionTimer, 1000);
     </script>
 </body>
 </html>
