@@ -128,14 +128,12 @@ public class SessionService {
     
     public long getRemainingSessionSeconds(String token) {
         if (token == null || token.isEmpty()) {
-            System.out.println("DEBUG: Token is null or empty, returning full timeout: " + sessionTimeoutSeconds);
             return sessionTimeoutSeconds; // Return full timeout if no token
         }
         
         try {
             String[] parts = token.split("\\|");
             if (parts.length != 4) {
-                System.out.println("DEBUG: Invalid token format, parts length: " + parts.length);
                 return sessionTimeoutSeconds;
             }
             
@@ -145,12 +143,8 @@ public class SessionService {
             long elapsed = currentTime - tokenTime;
             long remaining = sessionTimeoutSeconds - elapsed;
             
-            System.out.println("DEBUG: Token time: " + tokenTime + ", Current time: " + currentTime + 
-                             ", Elapsed: " + elapsed + ", Remaining: " + remaining);
-            
             return Math.max(0, remaining);
         } catch (Exception e) {
-            System.out.println("DEBUG: Exception in getRemainingSessionSeconds: " + e.getMessage());
             return sessionTimeoutSeconds;
         }
     }
