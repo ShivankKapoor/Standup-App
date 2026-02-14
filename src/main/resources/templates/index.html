@@ -829,64 +829,29 @@
             });
         }
         
-        // Live time display using WorldTimeAPI (Chicago timezone)
-        let serverTimeOffset = 0;
-        let lastSyncTime = 0;
-        
-        async function syncWithTimeAPI() {
-            try {
-                // Use WorldTimeAPI for Chicago timezone (CST/CDT)
-                const response = await fetch('https://worldtimeapi.org/api/timezone/America/Chicago');
-                const data = await response.json();
-                
-                if (data.unixtime) {
-                    const apiTime = data.unixtime * 1000; // Convert to milliseconds
-                    const localTime = Date.now();
-                    serverTimeOffset = apiTime - localTime;
-                    lastSyncTime = localTime;
-                    console.log('Synced with WorldTime API (Chicago timezone)');
-                    
-                    // Update date immediately
-                    updateDate(new Date(apiTime));
-                }
-            } catch (error) {
-                console.log('WorldTime API sync failed, using local time:', error);
-                serverTimeOffset = 0;
-                updateDate(new Date());
-            }
-        }
-        
+        // Live time and date display
         function updateTime() {
-            const localTime = Date.now();
+            const now = new Date();
             
-            // Re-sync every 10 minutes to maintain accuracy
-            if (localTime - lastSyncTime > 10 * 60 * 1000) {
-                syncWithTimeAPI();
-            }
-            
-            // Calculate accurate time using server offset
-            const accurateTime = new Date(localTime + serverTimeOffset);
-            const timeString = accurateTime.toLocaleTimeString('en-US', {
+            // Update time display
+            const timeString = now.toLocaleTimeString('en-US', {
                 hour12: true,
                 hour: '2-digit',
                 minute: '2-digit',
-                second: '2-digit',
-                timeZone: 'America/Chicago'
+                second: '2-digit'
             });
             
             const liveTimeElement = document.getElementById('live-time');
             if (liveTimeElement) {
-                liveTimeElement.textContent = timeString + ' CST';
+                liveTimeElement.textContent = timeString;
             }
-        }
-        
-        function updateDate(date) {
-            const dateString = date.toLocaleDateString('en-US', {
+            
+            // Update date display
+            const dateString = now.toLocaleDateString('en-US', {
                 weekday: 'short',
                 month: 'short',
                 day: 'numeric',
-                year: 'numeric',
-                timeZone: 'America/Chicago'
+                year: 'numeric'
             });
             
             const dateElement = document.getElementById('current-date');
@@ -895,11 +860,9 @@
             }
         }
         
-        // Initialize time sync and start updates
-        syncWithTimeAPI().then(() => {
-            updateTime();
-            setInterval(updateTime, 1000);
-        });
+        // Initialize time updates
+        updateTime();
+        setInterval(updateTime, 1000);
         
         function navigateToEntry(dateString) {
             window.location.href = '/entry/' + dateString;
