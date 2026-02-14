@@ -39,7 +39,25 @@ class HeatmapService {
     fun getHeatmapData(daysBack: Int = 365): HeatmapData {
         val allStandups = standupDataService.loadAllStandups()
         val today = LocalDate.now()
-        val startDate = today.minusDays(daysBack.toLong())
+        
+        // If daysBack is 9999, find the earliest entry and calculate from there
+        val actualStartDate = if (daysBack >= 9999) {
+            val earliestDate = allStandups.keys
+                .mapNotNull { dateStr ->
+                    try {
+                        LocalDate.parse(dateStr, DATE_FORMATTER)
+                    } catch (e: Exception) {
+                        null
+                    }
+                }
+                .minOrNull()
+            
+            earliestDate ?: today.minusDays(365) // Fallback to 1 year if no entries
+        } else {
+            today.minusDays(daysBack.toLong())
+        }
+        
+        val startDate = actualStartDate
 
         // Calculate word counts for each day
         val wordCounts = allStandups.mapValues { (_, content) ->
