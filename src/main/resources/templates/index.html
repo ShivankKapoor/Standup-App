@@ -10,6 +10,7 @@
             background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
             min-height: 100vh;
             padding: var(--spacing-md);
+            padding-bottom: calc(var(--spacing-lg) * 3 + 48px); /* leave room for corner buttons */
             overflow-x: hidden;
         }
         
@@ -276,11 +277,249 @@
             font-weight: var(--font-weight-medium);
         }
         
+        /* Heatmap Styles */
+        .heatmap-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            z-index: 2000;
+            padding: var(--spacing-md);
+            overflow-y: auto;
+        }
+        
+        .heatmap-modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .heatmap-container {
+            background: var(--background);
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--shadow-xl);
+            padding: var(--spacing-xl);
+            max-width: 1200px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+        
+        .heatmap-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-lg);
+            padding-bottom: var(--spacing-md);
+            border-bottom: 2px solid var(--background-darker);
+        }
+        
+        .heatmap-header h2 {
+            font-size: 24px;
+            color: var(--primary);
+            margin: 0;
+        }
+        
+        .close-btn {
+            background: var(--warn);
+            color: var(--background);
+            border: none;
+            padding: var(--spacing-sm) var(--spacing-md);
+            border-radius: var(--border-radius-md);
+            cursor: pointer;
+            font-weight: var(--font-weight-medium);
+            transition: all var(--transition-normal);
+        }
+        
+        .close-btn:hover {
+            background: var(--warn-dark);
+            transform: scale(1.05);
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--spacing-md);
+            margin-bottom: var(--spacing-xl);
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, var(--primary-light) 0%, var(--background-dark) 100%);
+            padding: var(--spacing-lg);
+            border-radius: var(--border-radius-md);
+            text-align: center;
+            box-shadow: var(--shadow-md);
+        }
+        
+        .stat-value {
+            font-size: 32px;
+            font-weight: var(--font-weight-bold);
+            color: var(--primary);
+            margin-bottom: var(--spacing-xs);
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: var(--text-muted);
+            font-weight: var(--font-weight-medium);
+        }
+        
+        .heatmap-grid-container {
+            background: var(--background-dark);
+            padding: var(--spacing-lg);
+            border-radius: var(--border-radius-md);
+            overflow-x: auto;
+        }
+        
+        .heatmap-legend {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+            margin-bottom: var(--spacing-md);
+            font-size: 14px;
+            color: var(--text);
+        }
+        
+        .legend-scale {
+            display: flex;
+            gap: var(--spacing-xs);
+        }
+        
+        .legend-box {
+            width: 15px;
+            height: 15px;
+            border-radius: 2px;
+        }
+        
+        .legend-box[data-intensity="0"] {
+            background: var(--background-darker);
+        }
+        
+        .legend-box[data-intensity="1"] {
+            background: rgba(255, 127, 80, 0.3);
+        }
+        
+        .legend-box[data-intensity="2"] {
+            background: rgba(255, 127, 80, 0.6);
+        }
+        
+        .legend-box[data-intensity="3"] {
+            background: rgba(255, 127, 80, 0.85);
+        }
+        
+        .legend-box[data-intensity="4"] {
+            background: rgb(255, 127, 80);
+        }
+        
+        .heatmap-grid {
+            display: grid;
+            grid-template-columns: auto repeat(53, 12px);
+            gap: 3px;
+            font-size: 10px;
+        }
+        
+        .month-label {
+            grid-column: span 1;
+            font-size: 11px;
+            color: var(--text-muted);
+            padding-right: var(--spacing-xs);
+            display: flex;
+            align-items: center;
+        }
+        
+        .heatmap-day {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .heatmap-day:hover {
+            transform: scale(1.5);
+            z-index: 10;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+        }
+        
+        .heatmap-day[data-intensity="0"] {
+            background: var(--background-darker);
+        }
+        
+        .heatmap-day[data-intensity="1"] {
+            background: rgba(255, 127, 80, 0.3);
+        }
+        
+        .heatmap-day[data-intensity="2"] {
+            background: rgba(255, 127, 80, 0.6);
+        }
+        
+        .heatmap-day[data-intensity="3"] {
+            background: rgba(255, 127, 80, 0.85);
+        }
+        
+        .heatmap-day[data-intensity="4"] {
+            background: rgb(255, 127, 80);
+        }
+        
+        .heatmap-tooltip {
+            position: fixed;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: var(--spacing-sm);
+            border-radius: var(--border-radius-sm);
+            font-size: 12px;
+            pointer-events: none;
+            z-index: 3000;
+            display: none;
+        }
+        
+        .summary-btn {
+            position: fixed;
+            bottom: calc(var(--spacing-lg) + 56px + 8px); /* timer position + timer height + gap */
+            right: var(--spacing-lg);
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.95);
+            color: var(--text);
+            border: none;
+            padding: var(--spacing-sm) var(--spacing-md);
+            border-radius: var(--border-radius-lg);
+            cursor: pointer;
+            font-weight: var(--font-weight-semibold);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            font-size: 16px;
+            font-family: var(--font-family-mono);
+            white-space: nowrap;
+            transition: all var(--transition-normal);
+            box-shadow: var(--shadow-lg);
+            backdrop-filter: blur(10px);
+        }
+        
+        .summary-btn:hover {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: var(--shadow-xl);
+        }
+
         @media (max-width: 768px) {
             body {
                 padding: var(--spacing-sm);
                 overflow-x: hidden;
                 overflow-y: auto;
+                padding-bottom: 120px; /* keep buttons off calendar on mobile */
+            }
+            .summary-btn {
+                bottom: calc(var(--spacing-lg) + 56px + 8px);
+                right: var(--spacing-sm);
+            }
+            .session-timer {
+                right: var(--spacing-sm);
             }
             
             .logout-container {
@@ -358,6 +597,13 @@
             .month-year {
                 font-size: 18px;
             }
+            
+            .summary-btn {
+                padding: var(--spacing-sm) var(--spacing-md);
+                font-size: 14px;
+                bottom: calc(var(--spacing-md) + 56px + 8px);
+                right: var(--spacing-md);
+            }
         }
         
         @media (max-width: 480px) {
@@ -417,6 +663,13 @@
             .current-date {
                 font-size: 10px;
             }
+            
+            .summary-btn {
+                padding: var(--spacing-xs) var(--spacing-sm);
+                font-size: 12px;
+                bottom: calc(var(--spacing-sm) + 56px + 8px);
+                right: var(--spacing-sm);
+            }
         }
     </style>
 </head>
@@ -424,6 +677,11 @@
     <div class="logout-container">
         <a href="/logout" class="logout-btn" id="logout-btn">🚪 Logout</a>
     </div>
+    
+    <button class="summary-btn" onclick="showHeatmap()">
+        <span style="font-size: 20px;">📊</span>
+        <span>Stats</span>
+    </button>
     
     <div class="session-timer" id="session-timer">
         <img th:src="@{/images/hourglass.apng}" alt="Timer">
@@ -485,6 +743,39 @@
             </div>
         </div>
     </div>
+    
+    <!-- Heatmap Modal -->
+    <div class="heatmap-modal" id="heatmap-modal">
+        <div class="heatmap-container">
+            <div class="heatmap-header">
+                <h2>📊 Activity Heatmap</h2>
+                <button class="close-btn" onclick="closeHeatmap()">✕ Close</button>
+            </div>
+            
+            <div class="stats-grid" id="stats-grid">
+                <!-- Stats will be populated by JavaScript -->
+            </div>
+            
+            <div class="heatmap-grid-container">
+                <div class="heatmap-legend">
+                    <span>Less</span>
+                    <div class="legend-scale">
+                        <div class="legend-box" data-intensity="0"></div>
+                        <div class="legend-box" data-intensity="1"></div>
+                        <div class="legend-box" data-intensity="2"></div>
+                        <div class="legend-box" data-intensity="3"></div>
+                        <div class="legend-box" data-intensity="4"></div>
+                    </div>
+                    <span>More</span>
+                </div>
+                <div id="heatmap-grid">
+                    <!-- Heatmap will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="heatmap-tooltip" id="heatmap-tooltip"></div>
 
     <script th:inline="javascript">
         const logoutBtn = document.getElementById('logout-btn');
@@ -605,6 +896,189 @@
         // Update session timer every second
         updateSessionTimer();
         setInterval(updateSessionTimer, 1000);
+        
+        // Heatmap functionality
+        let heatmapData = null;
+        
+        async function showHeatmap() {
+            const modal = document.getElementById('heatmap-modal');
+            modal.classList.add('active');
+            
+            if (!heatmapData) {
+                await loadHeatmapData();
+            }
+        }
+        
+        function closeHeatmap() {
+            const modal = document.getElementById('heatmap-modal');
+            modal.classList.remove('active');
+        }
+        
+        // Close on outside click
+        document.getElementById('heatmap-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeHeatmap();
+            }
+        });
+        
+        // Close on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeHeatmap();
+            }
+        });
+        
+        async function loadHeatmapData() {
+            try {
+                const response = await fetch('/api/heatmap?daysBack=365');
+                if (!response.ok) {
+                    throw new Error('Failed to load heatmap data');
+                }
+                
+                heatmapData = await response.json();
+                renderHeatmap(heatmapData);
+            } catch (error) {
+                console.error('Error loading heatmap:', error);
+                alert('Failed to load heatmap data. Please try again.');
+            }
+        }
+        
+        function renderHeatmap(data) {
+            // Render stats
+            const statsGrid = document.getElementById('stats-grid');
+            statsGrid.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-value">${data.stats.totalEntries}</div>
+                    <div class="stat-label">Total Entries</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${data.stats.currentStreak} 🔥</div>
+                    <div class="stat-label">Current Streak</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${data.stats.longestStreak}</div>
+                    <div class="stat-label">Longest Streak</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${Math.round(data.stats.averageWordCount)}</div>
+                    <div class="stat-label">Avg Words/Entry</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${data.stats.mostProductiveDay}</div>
+                    <div class="stat-label">Most Productive Day</div>
+                </div>
+            `;
+            
+            // Render heatmap grid (GitHub-style)
+            const heatmapGrid = document.getElementById('heatmap-grid');
+            heatmapGrid.innerHTML = '';
+            
+            // Group days by week
+            const weeks = [];
+            let currentWeek = [];
+            
+            // Pad the beginning to start on Sunday
+            const firstDay = data.days[0];
+            const firstDayOfWeek = firstDay.dayOfWeek;
+            for (let i = 0; i < firstDayOfWeek; i++) {
+                currentWeek.push(null);
+            }
+            
+            data.days.forEach(day => {
+                currentWeek.push(day);
+                if (currentWeek.length === 7) {
+                    weeks.push(currentWeek);
+                    currentWeek = [];
+                }
+            });
+            
+            // Add remaining days
+            if (currentWeek.length > 0) {
+                while (currentWeek.length < 7) {
+                    currentWeek.push(null);
+                }
+                weeks.push(currentWeek);
+            }
+            
+            // Create month labels
+            const monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            
+            // Render heatmap (rotate: weeks as columns, days as rows)
+            heatmapGrid.style.display = 'grid';
+            heatmapGrid.style.gridTemplateColumns = 'auto ' + 'repeat(' + weeks.length + ', 12px)';
+            heatmapGrid.style.gridTemplateRows = 'repeat(7, 12px)';
+            heatmapGrid.style.gap = '3px';
+            
+            // Day labels
+            const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            for (let dayNum = 0; dayNum < 7; dayNum++) {
+                const label = document.createElement('div');
+                label.className = 'month-label';
+                label.textContent = dayLabels[dayNum];
+                label.style.gridColumn = '1';
+                label.style.gridRow = (dayNum + 1);
+                heatmapGrid.appendChild(label);
+            }
+            
+            // Render each week as a column
+            weeks.forEach((week, weekIndex) => {
+                week.forEach((day, dayIndex) => {
+                    const cell = document.createElement('div');
+                    cell.className = 'heatmap-day';
+                    
+                    if (day) {
+                        cell.setAttribute('data-intensity', day.intensity);
+                        cell.setAttribute('data-date', day.date);
+                        cell.setAttribute('data-words', day.wordCount);
+                        
+                        // Tooltip on hover
+                        cell.addEventListener('mouseenter', function(e) {
+                            showTooltip(e, day);
+                        });
+                        
+                        cell.addEventListener('mouseleave', function() {
+                            hideTooltip();
+                        });
+                        
+                        // Click to navigate to entry
+                        cell.addEventListener('click', function() {
+                            window.location.href = '/entry/' + day.date;
+                        });
+                    } else {
+                        cell.style.background = 'transparent';
+                        cell.style.cursor = 'default';
+                    }
+                    
+                    cell.style.gridColumn = (weekIndex + 2);
+                    cell.style.gridRow = (dayIndex + 1);
+                    heatmapGrid.appendChild(cell);
+                });
+            });
+        }
+        
+        function showTooltip(event, day) {
+            const tooltip = document.getElementById('heatmap-tooltip');
+            const date = new Date(day.date);
+            const dateStr = date.toLocaleDateString('en-US', { 
+                weekday: 'short', 
+                month: 'short', 
+                day: 'numeric', 
+                year: 'numeric' 
+            });
+            
+            tooltip.innerHTML = `
+                <strong>${dateStr}</strong><br>
+                ${day.wordCount} words
+            `;
+            tooltip.style.display = 'block';
+            tooltip.style.left = (event.pageX + 10) + 'px';
+            tooltip.style.top = (event.pageY + 10) + 'px';
+        }
+        
+        function hideTooltip() {
+            const tooltip = document.getElementById('heatmap-tooltip');
+            tooltip.style.display = 'none';
+        }
     </script>
 </body>
 </html>
