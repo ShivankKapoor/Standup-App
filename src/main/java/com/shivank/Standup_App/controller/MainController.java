@@ -105,11 +105,14 @@ public class MainController {
         Map<String, String> standups = standupDataService.loadAllStandups();
         List<CalendarService.CalendarDay> calendarDays = calendarService.generateCalendarDays(displayDate, standups);
         
+        String token = getSessionTokenFromCookies(request);
+        long remainingSeconds = sessionService.getRemainingSessionSeconds(token);
+        
         model.addAttribute("currentUser", currentUser);
         model.addAttribute("displayDate", displayDate);
         model.addAttribute("calendarDays", calendarDays);
         model.addAttribute("today", LocalDate.now(CST_ZONE));
-        model.addAttribute("sessionTimeout", sessionService.getSessionTimeoutSeconds());
+        model.addAttribute("sessionTimeout", remainingSeconds);
         
         return "index";
     }
@@ -288,10 +291,13 @@ public class MainController {
             LocalDate entryDate = LocalDate.parse(date, DATE_FORMATTER);
             String content = standupDataService.getStandup(entryDate);
             
+            String token = getSessionTokenFromCookies(request);
+            long remainingSeconds = sessionService.getRemainingSessionSeconds(token);
+            
             model.addAttribute("date", entryDate);
             model.addAttribute("content", content);
             model.addAttribute("hasContent", content != null && !content.trim().isEmpty());
-            model.addAttribute("sessionTimeout", sessionService.getSessionTimeoutSeconds());
+            model.addAttribute("sessionTimeout", remainingSeconds);
             
             return "entry";
         } catch (DateTimeParseException e) {
@@ -319,10 +325,13 @@ public class MainController {
                 }
             }
             
+            String token = getSessionTokenFromCookies(request);
+            long remainingSeconds = sessionService.getRemainingSessionSeconds(token);
+            
             model.addAttribute("date", entryDate);
             model.addAttribute("content", actualContent);
             model.addAttribute("dayType", dayType);
-            model.addAttribute("sessionTimeout", sessionService.getSessionTimeoutSeconds());
+            model.addAttribute("sessionTimeout", remainingSeconds);
             
             return "edit";
         } catch (DateTimeParseException e) {
