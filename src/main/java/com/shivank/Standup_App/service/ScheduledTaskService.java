@@ -23,12 +23,19 @@ public class ScheduledTaskService {
 
     @Value("${app.uptime.max.millis:604800000}")
     private long maxUptimeMillis;
+    
+    @Value("${MODE:PROD}")
+    private String mode;
 
     @Autowired
     private DiscordService discordService;
     
     @Autowired
     private SessionService sessionService;
+    
+    private boolean isQAMode() {
+        return "QA".equalsIgnoreCase(mode);
+    }
 
     /**
      * Runs every day at 12:00 AM CST to clean up expired session tokens
@@ -48,6 +55,12 @@ public class ScheduledTaskService {
     
     private void sendSessionCleanupNotification(int removedCount) {
         try {
+            // Skip Discord notifications in QA mode
+            if (isQAMode()) {
+                logger.info("QA mode: Skipping Discord notification for session cleanup");
+                return;
+            }
+            
             Map<String, Object> embed = new HashMap<>();
             Map<String, Object> author = new HashMap<>();
             
@@ -117,6 +130,12 @@ public class ScheduledTaskService {
             logger.info("Current application uptime: " + ScheduledTaskService.formatUptime(uptimeMillis));
 
             if (uptimeMillis >= maxUptimeMillis) {
+                // Skip Discord notifications in QA mode
+                if (isQAMode()) {
+                    logger.info("QA mode: Skipping Discord notification for uptime alert");
+                    return;
+                }
+                
                 // Create Discord embed similar to security alerts
                 Map<String, Object> embed = new HashMap<>();
                 Map<String, Object> author = new HashMap<>();

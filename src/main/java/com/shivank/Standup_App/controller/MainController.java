@@ -57,8 +57,15 @@ public class MainController {
     @Value("${auth.password}")
     private String authPassword;
     
+    @Value("${MODE:PROD}")
+    private String mode;
+    
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     private static final ZoneId CST_ZONE = ZoneId.of("America/Chicago");
+    
+    private boolean isQAMode() {
+        return "QA".equalsIgnoreCase(mode);
+    }
     
     // Debug endpoint to check auth values
     @GetMapping("/debug-auth")
@@ -156,6 +163,21 @@ public class MainController {
                     "IP: " + ip + " - Invalid credentials for User: " + username);
             model.addAttribute("error", "Invalid username or password");
             return "login";
+        }
+        
+        // In QA mode, skip 2FA and directly create session
+        if (isQAMode()) {
+            String sessionToken = sessionService.createSessionToken(username);
+            
+            Cookie cookie = new Cookie("session_token", sessionToken);
+            cookie.setMaxAge(8 * 3600); // 8 hours
+            cookie.setHttpOnly(true);
+            cookie.setPath("/");
+            cookie.setSecure(false);
+            response.addCookie(cookie);
+            
+            loggingService.logAppEvent("User " + username + " from IP " + ip + " logged in (QA mode - 2FA skipped)");
+            return "redirect:/";
         }
         
         // Credentials are valid, redirect to 2FA verification
