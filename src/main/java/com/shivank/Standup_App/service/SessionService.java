@@ -126,6 +126,29 @@ public class SessionService {
         return sessionTimeoutSeconds;
     }
     
+    public long getRemainingSessionSeconds(String token) {
+        if (token == null || token.isEmpty()) {
+            return sessionTimeoutSeconds; // Return full timeout if no token
+        }
+        
+        try {
+            String[] parts = token.split("\\|");
+            if (parts.length != 4) {
+                return sessionTimeoutSeconds;
+            }
+            
+            String timestamp = parts[1];
+            long tokenTime = Long.parseLong(timestamp);
+            long currentTime = Instant.now().getEpochSecond();
+            long elapsed = currentTime - tokenTime;
+            long remaining = sessionTimeoutSeconds - elapsed;
+            
+            return Math.max(0, remaining);
+        } catch (Exception e) {
+            return sessionTimeoutSeconds;
+        }
+    }
+    
     private String bytesToHex(byte[] bytes) {
         StringBuilder result = new StringBuilder();
         for (byte b : bytes) {

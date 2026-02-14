@@ -20,6 +20,56 @@
             z-index: 1000;
         }
         
+        .session-timer {
+            position: fixed;
+            bottom: var(--spacing-lg);
+            right: var(--spacing-lg);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            background: rgba(255, 255, 255, 0.95);
+            padding: var(--spacing-sm) var(--spacing-md);
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--shadow-lg);
+            backdrop-filter: blur(10px);
+        }
+        
+        .session-timer img {
+            width: 32px;
+            height: 32px;
+        }
+        
+        .session-timer-text {
+            font-size: 16px;
+            font-weight: var(--font-weight-semibold);
+            font-family: var(--font-family-mono);
+            color: var(--text);
+        }
+        
+        .session-timer.warning {
+            background: rgba(255, 193, 7, 0.95);
+            animation: pulse 1s infinite;
+        }
+        
+        .session-timer.warning .session-timer-text {
+            color: var(--background);
+        }
+        
+        .session-timer.critical {
+            background: rgba(220, 53, 69, 0.95);
+            animation: pulse 0.5s infinite;
+        }
+        
+        .session-timer.critical .session-timer-text {
+            color: var(--background);
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
         .logout-btn {
             background: var(--warn);
             color: var(--background);
@@ -374,6 +424,11 @@
     <div class="logout-container">
         <a href="/logout" class="logout-btn" id="logout-btn">🚪 Logout</a>
     </div>
+    
+    <div class="session-timer" id="session-timer">
+        <img th:src="@{/images/hourglass.apng}" alt="Timer">
+        <span class="session-timer-text">15:00</span>
+    </div>
 
     <div class="container">
         <div class="header">
@@ -431,7 +486,7 @@
         </div>
     </div>
 
-    <script>
+    <script th:inline="javascript">
         const logoutBtn = document.getElementById('logout-btn');
         if (logoutBtn) {
             logoutBtn.addEventListener('click', function(e) {
@@ -518,11 +573,38 @@
             window.location.href = '/entry/' + dateString;
         }
         
-        // Auto-logout timer
-        const sessionTimeout = /*[[${sessionTimeout}]]*/ 900; // Default to 15 minutes
-        setTimeout(function() {
-            window.location.href = '/logout';
-        }, sessionTimeout * 1000); // Convert seconds to milliseconds
+        // Session countdown timer - value calculated by backend
+        const sessionTimeout = [[${sessionTimeout}]];
+        const sessionTimerElement = document.getElementById('session-timer');
+        const sessionTimerText = sessionTimerElement.querySelector('.session-timer-text');
+        let remainingSeconds = sessionTimeout;
+        console.log('Session timer initialized with', remainingSeconds, 'seconds remaining');
+        
+        function updateSessionTimer() {
+            const minutes = Math.floor(remainingSeconds / 60);
+            const seconds = remainingSeconds % 60;
+            const timeString = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            sessionTimerText.textContent = timeString;
+            
+            // Visual warnings
+            if (remainingSeconds <= 60) {
+                sessionTimerElement.classList.add('critical');
+                sessionTimerElement.classList.remove('warning');
+            } else if (remainingSeconds <= 180) {
+                sessionTimerElement.classList.add('warning');
+                sessionTimerElement.classList.remove('critical');
+            }
+            
+            remainingSeconds--;
+            
+            if (remainingSeconds < 0) {
+                window.location.href = '/logout';
+            }
+        }
+        
+        // Update session timer every second
+        updateSessionTimer();
+        setInterval(updateSessionTimer, 1000);
     </script>
 </body>
 </html>
