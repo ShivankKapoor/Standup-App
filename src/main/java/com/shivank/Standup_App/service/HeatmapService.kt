@@ -20,7 +20,8 @@ class HeatmapService {
         val date: String,
         val intensity: Int,  // 0-4 scale
         val wordCount: Int,
-        val dayOfWeek: Int   // 0 = Sunday, 6 = Saturday
+        val dayOfWeek: Int,   // 0 = Sunday, 6 = Saturday
+        val dayType: String?  // "PTO", "Planning", "Support", or null for regular entries
     )
 
     data class HeatmapData(
@@ -79,11 +80,22 @@ class HeatmapService {
 
         while (!currentDate.isAfter(today)) {
             val dateStr = currentDate.format(DATE_FORMATTER)
+            val content = allStandups[dateStr]
             val wordCount = wordCounts[dateStr] ?: 0
-            val intensity = calculateIntensity(wordCount, avgCount, maxCount)
+            
+            // Detect special day types
+            val dayType = when {
+                content?.startsWith("$(PTO)") == true -> "PTO"
+                content?.startsWith("$(Planning)") == true -> "Planning"
+                content?.startsWith("$(Support)") == true -> "Support"
+                else -> null
+            }
+            
+            // For special days, always show as having content (intensity 2)
+            val intensity = if (dayType != null) 2 else calculateIntensity(wordCount, avgCount, maxCount)
             val dayOfWeek = currentDate.dayOfWeek.value % 7 // Convert to 0=Sunday
 
-            heatmapDays.add(HeatmapDay(dateStr, intensity, wordCount, dayOfWeek))
+            heatmapDays.add(HeatmapDay(dateStr, intensity, wordCount, dayOfWeek, dayType))
             currentDate = currentDate.plusDays(1)
         }
 
@@ -104,7 +116,8 @@ class HeatmapService {
     }
 
     private fun calculateStats(days: List<HeatmapDay>, allStandups: Map<String, String>): HeatmapStats {
-        val entriesWithContent = days.filter { it.wordCount > 0 }
+        // Count entries with content OR special day types
+        val entriesWithContent = days.filter { it.wordCount > 0 || it.dayType != null }
         val totalEntries = entriesWithContent.size
 
         // Calculate streaks
@@ -145,7 +158,8 @@ class HeatmapService {
         for (i in sortedDays.indices.reversed()) {
             val day = sortedDays[i]
             
-            if (day.wordCount > 0) {
+            // Count both regular entries and special day types for streaks
+            if (day.wordCount > 0 || day.dayType != null) {
                 tempStreak++
                 if (day.date == today || (i < sortedDays.size - 1 && 
                     ChronoUnit.DAYS.between(
@@ -157,7 +171,7 @@ class HeatmapService {
                     }
                     if (isCurrentStreakActive && i == sortedDays.size - 1) {
                         currentStreak = tempStreak
-                    } else if (isCurrentStreakActive && sortedDays[i + 1].wordCount > 0) {
+                    } else if (isCurrentStreakActive && (sortedDays[i + 1].wordCount > 0 || sortedDays[i + 1].dayType != null)) {
                         currentStreak = tempStreak
                     }
                 }
@@ -177,7 +191,8 @@ class HeatmapService {
         currentStreak = 0
         for (i in sortedDays.indices.reversed()) {
             val day = sortedDays[i]
-            if (day.wordCount > 0) {
+            // Count both regular entries and special day types
+            if (day.wordCount > 0 || day.dayType != null) {
                 currentStreak++
             } else if (day.date <= today) {
                 break
