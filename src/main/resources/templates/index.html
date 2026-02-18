@@ -498,6 +498,19 @@
             background: rgb(255, 127, 80);
         }
         
+        /* Special day type colors - override intensity colors */
+        .heatmap-day.pto-day {
+            background: #a259e6 !important;
+        }
+        
+        .heatmap-day.planning-day {
+            background: #2ecc40 !important;
+        }
+        
+        .heatmap-day.support-day {
+            background: #ffe066 !important;
+        }
+        
         .heatmap-tooltip {
             position: fixed;
             background: rgba(0, 0, 0, 0.9);
@@ -991,31 +1004,35 @@
             const heatmapGrid = document.getElementById('heatmap-grid');
             heatmapGrid.innerHTML = '';
             
-            // Group days by week
+            // Group days by actual calendar week
             const weeks = [];
-            let currentWeek = [];
+            const weekMap = new Map();
             
-            // Pad the beginning to start on Sunday
-            const firstDay = data.days[0];
-            const firstDayOfWeek = firstDay.dayOfWeek;
-            for (let i = 0; i < firstDayOfWeek; i++) {
-                currentWeek.push(null);
+            // Helper function to parse date string as local date
+            function parseLocalDate(dateStr) {
+                const [year, month, day] = dateStr.split('-');
+                return new Date(year, month - 1, day);
             }
             
             data.days.forEach(day => {
-                currentWeek.push(day);
-                if (currentWeek.length === 7) {
-                    weeks.push(currentWeek);
-                    currentWeek = [];
+                const date = parseLocalDate(day.date);
+                // Calculate week number from start date
+                const firstDate = parseLocalDate(data.days[0].date);
+                const daysDiff = Math.floor((date - firstDate) / (1000 * 60 * 60 * 24));
+                const weekNum = Math.floor(daysDiff / 7);
+                
+                if (!weekMap.has(weekNum)) {
+                    weekMap.set(weekNum, new Array(7).fill(null));
                 }
+                
+                // Place day in correct position based on its dayOfWeek
+                weekMap.get(weekNum)[day.dayOfWeek] = day;
             });
             
-            // Add remaining days
-            if (currentWeek.length > 0) {
-                while (currentWeek.length < 7) {
-                    currentWeek.push(null);
-                }
-                weeks.push(currentWeek);
+            // Convert map to array
+            const maxWeek = Math.max(...weekMap.keys());
+            for (let i = 0; i <= maxWeek; i++) {
+                weeks.push(weekMap.get(i) || new Array(7).fill(null));
             }
             
             // Calculate dynamic cell size based on number of weeks
@@ -1062,6 +1079,15 @@
                         cell.setAttribute('data-date', day.date);
                         cell.setAttribute('data-words', day.wordCount);
                         
+                        // Apply special day type classes
+                        if (day.dayType === 'PTO') {
+                            cell.classList.add('pto-day');
+                        } else if (day.dayType === 'Planning') {
+                            cell.classList.add('planning-day');
+                        } else if (day.dayType === 'Support') {
+                            cell.classList.add('support-day');
+                        }
+                        
                         // Tooltip on hover
                         cell.addEventListener('mouseenter', function(e) {
                             showTooltip(e, day);
@@ -1080,6 +1106,7 @@
                         cell.style.cursor = 'default';
                     }
                     
+                    // dayIndex now correctly represents the day of week (0=Sun, 1=Mon, etc.)
                     cell.style.gridColumn = (weekIndex + 2);
                     cell.style.gridRow = (dayIndex + 1);
                     heatmapGrid.appendChild(cell);
@@ -1089,7 +1116,9 @@
         
         function showTooltip(event, day) {
             const tooltip = document.getElementById('heatmap-tooltip');
-            const date = new Date(day.date);
+            // Parse date as local date to avoid timezone issues
+            const [year, month, dayNum] = day.date.split('-');
+            const date = new Date(year, month - 1, dayNum);
             const dateStr = date.toLocaleDateString('en-US', { 
                 weekday: 'short', 
                 month: 'short', 
@@ -1097,10 +1126,15 @@
                 year: 'numeric' 
             });
             
-            tooltip.innerHTML = `
-                <strong>${dateStr}</strong><br>
-                ${day.wordCount} words
-            `;
+            // Show day type for special days, otherwise show word count
+            let content;
+            if (day.dayType) {
+                content = `<strong>${dateStr}</strong><br>${day.dayType}`;
+            } else {
+                content = `<strong>${dateStr}</strong><br>${day.wordCount} words`;
+            }
+            
+            tooltip.innerHTML = content;
             tooltip.style.display = 'block';
             tooltip.style.left = (event.pageX + 10) + 'px';
             tooltip.style.top = (event.pageY + 10) + 'px';
