@@ -85,9 +85,16 @@
             margin: var(--spacing-lg) 0;
         }
         
-        .code-box {
+        .code-box-wrapper {
+            position: relative;
             width: 50px;
             height: 60px;
+            perspective: 500px;
+        }
+        
+        .code-box {
+            width: 100%;
+            height: 100%;
             text-align: center;
             font-size: 32px;
             font-weight: var(--font-weight-bold);
@@ -95,15 +102,76 @@
             border: 2px solid var(--background-dark);
             border-radius: var(--border-radius);
             background: var(--background-light);
-            color: var(--text);
-            transition: all 0.2s ease;
+            color: transparent;
+            caret-color: transparent;
+            transition: border-color 0.2s ease;
+            position: relative;
+            z-index: 2;
         }
         
         .code-box:focus {
             outline: none;
             border-color: var(--primary);
-            background: var(--background);
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            animation: pulse-box 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse-box {
+            0%, 100% {
+                box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            }
+            50% {
+                box-shadow: 0 0 0 6px rgba(59, 130, 246, 0.2), 0 0 20px rgba(59, 130, 246, 0.3);
+            }
+        }
+        
+        .flip-card {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            font-weight: var(--font-weight-bold);
+            font-family: monospace;
+            color: var(--text);
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .flip-card-inner {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.4s cubic-bezier(0.4, 0.0, 0.2, 1);
+        }
+        
+        .flip-card.flipping .flip-card-inner {
+            transform: rotateX(-180deg);
+        }
+        
+        .flip-card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--border-radius);
+            background: var(--background-light);
+        }
+        
+        .flip-card-front {
+            transform: rotateX(0deg);
+        }
+        
+        .flip-card-back {
+            transform: rotateX(180deg);
         }
         
         .code-box::-webkit-outer-spin-button,
@@ -173,9 +241,12 @@
                 gap: var(--spacing-sm);
             }
             
-            .code-box {
+            .code-box-wrapper {
                 width: 40px;
                 height: 50px;
+            }
+            
+            .code-box, .flip-card, .flip-card-face {
                 font-size: 24px;
             }
         }
@@ -195,12 +266,60 @@
                 <div class="form-group">
                     <label class="form-label">Authentication Code</label>
                     <div class="code-inputs-container">
-                        <input type="number" class="code-box" maxlength="1" min="0" max="9" pattern="\d" inputmode="numeric" required autofocus data-index="0">
-                        <input type="number" class="code-box" maxlength="1" min="0" max="9" pattern="\d" inputmode="numeric" required data-index="1">
-                        <input type="number" class="code-box" maxlength="1" min="0" max="9" pattern="\d" inputmode="numeric" required data-index="2">
-                        <input type="number" class="code-box" maxlength="1" min="0" max="9" pattern="\d" inputmode="numeric" required data-index="3">
-                        <input type="number" class="code-box" maxlength="1" min="0" max="9" pattern="\d" inputmode="numeric" required data-index="4">
-                        <input type="number" class="code-box" maxlength="1" min="0" max="9" pattern="\d" inputmode="numeric" required data-index="5">
+                        <div class="code-box-wrapper">
+                            <input type="number" class="code-box" maxlength="1" min="0" max="9" pattern="\d" inputmode="numeric" required autofocus data-index="0">
+                            <div class="flip-card">
+                                <div class="flip-card-inner">
+                                    <div class="flip-card-face flip-card-front"></div>
+                                    <div class="flip-card-face flip-card-back"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="code-box-wrapper">
+                            <input type="number" class="code-box" maxlength="1" min="0" max="9" pattern="\d" inputmode="numeric" required data-index="1">
+                            <div class="flip-card">
+                                <div class="flip-card-inner">
+                                    <div class="flip-card-face flip-card-front"></div>
+                                    <div class="flip-card-face flip-card-back"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="code-box-wrapper">
+                            <input type="number" class="code-box" maxlength="1" min="0" max="9" pattern="\d" inputmode="numeric" required data-index="2">
+                            <div class="flip-card">
+                                <div class="flip-card-inner">
+                                    <div class="flip-card-face flip-card-front"></div>
+                                    <div class="flip-card-face flip-card-back"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="code-box-wrapper">
+                            <input type="number" class="code-box" maxlength="1" min="0" max="9" pattern="\d" inputmode="numeric" required data-index="3">
+                            <div class="flip-card">
+                                <div class="flip-card-inner">
+                                    <div class="flip-card-face flip-card-front"></div>
+                                    <div class="flip-card-face flip-card-back"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="code-box-wrapper">
+                            <input type="number" class="code-box" maxlength="1" min="0" max="9" pattern="\d" inputmode="numeric" required data-index="4">
+                            <div class="flip-card">
+                                <div class="flip-card-inner">
+                                    <div class="flip-card-face flip-card-front"></div>
+                                    <div class="flip-card-face flip-card-back"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="code-box-wrapper">
+                            <input type="number" class="code-box" maxlength="1" min="0" max="9" pattern="\d" inputmode="numeric" required data-index="5">
+                            <div class="flip-card">
+                                <div class="flip-card-inner">
+                                    <div class="flip-card-face flip-card-front"></div>
+                                    <div class="flip-card-face flip-card-back"></div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <input type="hidden" id="code" name="code" required>
                 </div>
@@ -218,11 +337,59 @@
         document.addEventListener('DOMContentLoaded', function() {
             const form = document.getElementById('twoFactorForm');
             const boxes = document.querySelectorAll('.code-box');
+            const flipCards = document.querySelectorAll('.flip-card');
             const hiddenInput = document.getElementById('code');
             const submitBtn = document.getElementById('submitBtn');
             
+            // Track current displayed values
+            const currentValues = Array(6).fill('');
+            
             // Auto-focus first box
             boxes[0].focus();
+            
+            function flipDigit(index, newValue, isDelete = false) {
+                const flipCard = flipCards[index];
+                const flipInner = flipCard.querySelector('.flip-card-inner');
+                const front = flipCard.querySelector('.flip-card-front');
+                const back = flipCard.querySelector('.flip-card-back');
+                const oldValue = currentValues[index];
+                
+                // Skip animation if value hasn't changed
+                if (oldValue === newValue) {
+                    return;
+                }
+                
+                // Set up the flip
+                front.textContent = oldValue || '';
+                back.textContent = newValue || '';
+                
+                // Use different animation for delete
+                if (isDelete) {
+                    flipInner.style.transform = 'rotateX(180deg)';
+                } else {
+                    flipInner.style.transform = 'rotateX(-180deg)';
+                }
+                
+                flipCard.classList.add('flipping');
+                
+                // After animation completes, reset for next flip
+                setTimeout(() => {
+                    // Update the displayed value
+                    front.textContent = newValue || '';
+                    back.textContent = '';
+                    currentValues[index] = newValue;
+                    
+                    // Reset transform instantly
+                    flipInner.style.transition = 'none';
+                    flipInner.style.transform = 'rotateX(0deg)';
+                    flipCard.classList.remove('flipping');
+                    
+                    // Re-enable transition
+                    setTimeout(() => {
+                        flipInner.style.transition = 'transform 0.4s cubic-bezier(0.4, 0.0, 0.2, 1)';
+                    }, 50);
+                }, 400);
+            }
             
             function updateHiddenInput() {
                 const code = Array.from(boxes).map(box => box.value).join('');
@@ -247,6 +414,11 @@
                         this.value = this.value.slice(0, 1);
                     }
                     
+                    // Trigger flip animation
+                    if (this.value || currentValues[index]) {
+                        flipDigit(index, this.value, false);
+                    }
+                    
                     updateHiddenInput();
                     
                     // Move to next box if value entered
@@ -263,10 +435,12 @@
                         
                         if (this.value) {
                             // If current box has value, clear it
+                            flipDigit(index, '', true);
                             this.value = '';
                         } else if (index > 0) {
                             // If current box is empty, move to previous and clear it
                             boxes[index - 1].focus();
+                            flipDigit(index - 1, '', true);
                             boxes[index - 1].value = '';
                         }
                         
@@ -276,6 +450,7 @@
                     // Delete key - clear current box
                     if (e.key === 'Delete') {
                         e.preventDefault();
+                        flipDigit(index, '', true);
                         this.value = '';
                         updateHiddenInput();
                     }
@@ -314,6 +489,7 @@
                     pastedData.split('').forEach((digit, i) => {
                         if (index + i < boxes.length) {
                             boxes[index + i].value = digit;
+                            flipDigit(index + i, digit, false);
                         }
                     });
                     
@@ -335,6 +511,7 @@
                 if (e.key === 'Backspace') {
                     e.preventDefault();
                     boxes[5].focus();
+                    flipDigit(5, '', true);
                     boxes[5].value = '';
                     updateHiddenInput();
                 }
