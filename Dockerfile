@@ -1,5 +1,9 @@
 # --------- Build stage ---------
-FROM maven:3.9.6-amazoncorretto-17 AS build
+FROM registry.access.redhat.com/ubi9/openjdk-17:latest AS build
+
+# Install Maven
+USER root
+RUN microdnf install -y maven && microdnf clean all
 
 WORKDIR /app
 
@@ -14,10 +18,11 @@ COPY src ./src
 RUN mvn clean package -DskipTests
 
 # --------- Run stage ---------
-FROM amazoncorretto:17-alpine
+FROM registry.access.redhat.com/ubi9/openjdk-17-runtime:latest
 
-# Install curl for health checks and tzdata for timezone support
-RUN apk add --no-cache curl tzdata
+# curl-minimal is already installed, just install tzdata
+USER root
+RUN microdnf install -y tzdata && microdnf clean all
 
 WORKDIR /app
 
