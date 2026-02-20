@@ -320,9 +320,12 @@
                     strip.style.transform = 'translateY(0)';
                     // Force reflow before adding transition
                     strip.getBoundingClientRect();
+                    // Duration scales with digit so it spins at constant speed
+                    // 0 → 100ms, 9 → 568ms
+                    const duration = 100 + (digit * 52);
                     // Animate down to the target digit
                     // Strip layout: blank=index 0, digit 0=index 1, digit N=index N+1
-                    strip.style.transition = 'transform 0.45s cubic-bezier(0.0, 0.0, 0.15, 1.0)';
+                    strip.style.transition = `transform ${duration}ms cubic-bezier(0.0, 0.0, 0.15, 1.0)`;
                     strip.style.transform = `translateY(-${(digit + 1) * cellHeight}px)`;
                 }
             }
