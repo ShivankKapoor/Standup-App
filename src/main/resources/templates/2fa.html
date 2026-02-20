@@ -89,7 +89,6 @@
             position: relative;
             width: 50px;
             height: 60px;
-            perspective: 500px;
         }
         
         .code-box {
@@ -101,7 +100,7 @@
             font-family: monospace;
             border: 2px solid var(--background-dark);
             border-radius: var(--border-radius);
-            background: var(--background-light);
+            background: transparent;
             color: transparent;
             caret-color: transparent;
             transition: border-color 0.2s ease;
@@ -124,13 +123,32 @@
                 box-shadow: 0 0 0 6px rgba(59, 130, 246, 0.2), 0 0 20px rgba(59, 130, 246, 0.3);
             }
         }
-        
-        .flip-card {
+
+        /* Odometer / fuel counter styles */
+        .odometer {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
+            overflow: hidden;
+            pointer-events: none;
+            z-index: 1;
+            border-radius: var(--border-radius);
+            background: var(--background-light);
+            -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 30%, black 70%, transparent 100%);
+            mask-image: linear-gradient(to bottom, transparent 0%, black 30%, black 70%, transparent 100%);
+        }
+
+        .odometer-strip {
+            display: flex;
+            flex-direction: column;
+            transform: translateY(0);
+            will-change: transform;
+        }
+
+        .odometer-digit {
+            height: 60px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -138,40 +156,7 @@
             font-weight: var(--font-weight-bold);
             font-family: monospace;
             color: var(--text);
-            pointer-events: none;
-            z-index: 1;
-        }
-        
-        .flip-card-inner {
-            width: 100%;
-            height: 100%;
-            position: relative;
-            transform-style: preserve-3d;
-            transition: transform 0.20s cubic-bezier(0.4, 0.0, 0.2, 1);
-        }
-        
-        .flip-card.flipping .flip-card-inner {
-            transform: rotateX(-180deg);
-        }
-        
-        .flip-card-face {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            backface-visibility: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: var(--border-radius);
-            background: var(--background-light);
-        }
-        
-        .flip-card-front {
-            transform: rotateX(0deg);
-        }
-        
-        .flip-card-back {
-            transform: rotateX(180deg);
+            flex-shrink: 0;
         }
         
         .code-box::-webkit-outer-spin-button,
@@ -182,6 +167,7 @@
         
         .code-box[type=number] {
             -moz-appearance: textfield;
+            appearance: textfield;
         }
         
         .submit-btn {
@@ -246,8 +232,12 @@
                 height: 50px;
             }
             
-            .code-box, .flip-card, .flip-card-face {
+            .code-box, .odometer-digit {
                 font-size: 24px;
+            }
+
+            .odometer-digit {
+                height: 50px;
             }
         }
     </style>
@@ -268,57 +258,27 @@
                     <div class="code-inputs-container">
                         <div class="code-box-wrapper">
                             <input type="number" class="code-box" maxlength="1" min="0" max="9" pattern="\d" inputmode="numeric" required autofocus data-index="0">
-                            <div class="flip-card">
-                                <div class="flip-card-inner">
-                                    <div class="flip-card-face flip-card-front"></div>
-                                    <div class="flip-card-face flip-card-back"></div>
-                                </div>
-                            </div>
+                            <div class="odometer"><div class="odometer-strip"><div class="odometer-digit"></div><div class="odometer-digit">0</div><div class="odometer-digit">1</div><div class="odometer-digit">2</div><div class="odometer-digit">3</div><div class="odometer-digit">4</div><div class="odometer-digit">5</div><div class="odometer-digit">6</div><div class="odometer-digit">7</div><div class="odometer-digit">8</div><div class="odometer-digit">9</div></div></div>
                         </div>
                         <div class="code-box-wrapper">
                             <input type="number" class="code-box" maxlength="1" min="0" max="9" pattern="\d" inputmode="numeric" required data-index="1">
-                            <div class="flip-card">
-                                <div class="flip-card-inner">
-                                    <div class="flip-card-face flip-card-front"></div>
-                                    <div class="flip-card-face flip-card-back"></div>
-                                </div>
-                            </div>
+                            <div class="odometer"><div class="odometer-strip"><div class="odometer-digit"></div><div class="odometer-digit">0</div><div class="odometer-digit">1</div><div class="odometer-digit">2</div><div class="odometer-digit">3</div><div class="odometer-digit">4</div><div class="odometer-digit">5</div><div class="odometer-digit">6</div><div class="odometer-digit">7</div><div class="odometer-digit">8</div><div class="odometer-digit">9</div></div></div>
                         </div>
                         <div class="code-box-wrapper">
                             <input type="number" class="code-box" maxlength="1" min="0" max="9" pattern="\d" inputmode="numeric" required data-index="2">
-                            <div class="flip-card">
-                                <div class="flip-card-inner">
-                                    <div class="flip-card-face flip-card-front"></div>
-                                    <div class="flip-card-face flip-card-back"></div>
-                                </div>
-                            </div>
+                            <div class="odometer"><div class="odometer-strip"><div class="odometer-digit"></div><div class="odometer-digit">0</div><div class="odometer-digit">1</div><div class="odometer-digit">2</div><div class="odometer-digit">3</div><div class="odometer-digit">4</div><div class="odometer-digit">5</div><div class="odometer-digit">6</div><div class="odometer-digit">7</div><div class="odometer-digit">8</div><div class="odometer-digit">9</div></div></div>
                         </div>
                         <div class="code-box-wrapper">
                             <input type="number" class="code-box" maxlength="1" min="0" max="9" pattern="\d" inputmode="numeric" required data-index="3">
-                            <div class="flip-card">
-                                <div class="flip-card-inner">
-                                    <div class="flip-card-face flip-card-front"></div>
-                                    <div class="flip-card-face flip-card-back"></div>
-                                </div>
-                            </div>
+                            <div class="odometer"><div class="odometer-strip"><div class="odometer-digit"></div><div class="odometer-digit">0</div><div class="odometer-digit">1</div><div class="odometer-digit">2</div><div class="odometer-digit">3</div><div class="odometer-digit">4</div><div class="odometer-digit">5</div><div class="odometer-digit">6</div><div class="odometer-digit">7</div><div class="odometer-digit">8</div><div class="odometer-digit">9</div></div></div>
                         </div>
                         <div class="code-box-wrapper">
                             <input type="number" class="code-box" maxlength="1" min="0" max="9" pattern="\d" inputmode="numeric" required data-index="4">
-                            <div class="flip-card">
-                                <div class="flip-card-inner">
-                                    <div class="flip-card-face flip-card-front"></div>
-                                    <div class="flip-card-face flip-card-back"></div>
-                                </div>
-                            </div>
+                            <div class="odometer"><div class="odometer-strip"><div class="odometer-digit"></div><div class="odometer-digit">0</div><div class="odometer-digit">1</div><div class="odometer-digit">2</div><div class="odometer-digit">3</div><div class="odometer-digit">4</div><div class="odometer-digit">5</div><div class="odometer-digit">6</div><div class="odometer-digit">7</div><div class="odometer-digit">8</div><div class="odometer-digit">9</div></div></div>
                         </div>
                         <div class="code-box-wrapper">
                             <input type="number" class="code-box" maxlength="1" min="0" max="9" pattern="\d" inputmode="numeric" required data-index="5">
-                            <div class="flip-card">
-                                <div class="flip-card-inner">
-                                    <div class="flip-card-face flip-card-front"></div>
-                                    <div class="flip-card-face flip-card-back"></div>
-                                </div>
-                            </div>
+                            <div class="odometer"><div class="odometer-strip"><div class="odometer-digit"></div><div class="odometer-digit">0</div><div class="odometer-digit">1</div><div class="odometer-digit">2</div><div class="odometer-digit">3</div><div class="odometer-digit">4</div><div class="odometer-digit">5</div><div class="odometer-digit">6</div><div class="odometer-digit">7</div><div class="odometer-digit">8</div><div class="odometer-digit">9</div></div></div>
                         </div>
                     </div>
                     <input type="hidden" id="code" name="code" required>
@@ -337,58 +297,37 @@
         document.addEventListener('DOMContentLoaded', function() {
             const form = document.getElementById('twoFactorForm');
             const boxes = document.querySelectorAll('.code-box');
-            const flipCards = document.querySelectorAll('.flip-card');
+            const strips = document.querySelectorAll('.odometer-strip');
             const hiddenInput = document.getElementById('code');
             const submitBtn = document.getElementById('submitBtn');
-            
-            // Track current displayed values
-            const currentValues = Array(6).fill('');
-            
+
             // Auto-focus first box
             boxes[0].focus();
-            
-            function flipDigit(index, newValue, isDelete = false) {
-                const flipCard = flipCards[index];
-                const flipInner = flipCard.querySelector('.flip-card-inner');
-                const front = flipCard.querySelector('.flip-card-front');
-                const back = flipCard.querySelector('.flip-card-back');
-                const oldValue = currentValues[index];
-                
-                // Skip animation if value hasn't changed
-                if (oldValue === newValue) {
-                    return;
-                }
-                
-                // Set up the flip
-                front.textContent = oldValue || '';
-                back.textContent = newValue || '';
-                
-                // Use different animation for delete
-                if (isDelete) {
-                    flipInner.style.transform = 'rotateX(180deg)';
+
+            function spinDigit(index, newValue, isDelete = false) {
+                const strip = strips[index];
+                // Cell height matches .odometer-digit size (60px desktop, 50px mobile)
+                const cellHeight = strip.querySelector('.odometer-digit').offsetHeight;
+
+                if (newValue === '' || newValue === null) {
+                    // Scroll back up to blank
+                    strip.style.transition = 'transform 0.25s ease-in';
+                    strip.style.transform = 'translateY(0)';
                 } else {
-                    flipInner.style.transform = 'rotateX(-180deg)';
+                    const digit = parseInt(newValue);
+                    // Instantly snap to blank (top of strip)
+                    strip.style.transition = 'none';
+                    strip.style.transform = 'translateY(0)';
+                    // Force reflow before adding transition
+                    strip.getBoundingClientRect();
+                    // Duration scales with digit so it spins at constant speed
+                    // 0 → 100ms, 9 → 568ms
+                    const duration = 100 + (digit * 52);
+                    // Animate down to the target digit
+                    // Strip layout: blank=index 0, digit 0=index 1, digit N=index N+1
+                    strip.style.transition = `transform ${duration}ms cubic-bezier(0.0, 0.0, 0.15, 1.0)`;
+                    strip.style.transform = `translateY(-${(digit + 1) * cellHeight}px)`;
                 }
-                
-                flipCard.classList.add('flipping');
-                
-                // After animation completes, reset for next flip
-                setTimeout(() => {
-                    // Update the displayed value
-                    front.textContent = newValue || '';
-                    back.textContent = '';
-                    currentValues[index] = newValue;
-                    
-                    // Reset transform instantly
-                    flipInner.style.transition = 'none';
-                    flipInner.style.transform = 'rotateX(0deg)';
-                    flipCard.classList.remove('flipping');
-                    
-                    // Re-enable transition
-                    setTimeout(() => {
-                        flipInner.style.transition = 'transform 0.20s cubic-bezier(0.4, 0.0, 0.2, 1)';
-                    }, 50);
-                }, 200);
             }
             
             function updateHiddenInput() {
@@ -414,10 +353,8 @@
                         this.value = this.value.slice(0, 1);
                     }
                     
-                    // Trigger flip animation
-                    if (this.value || currentValues[index]) {
-                        flipDigit(index, this.value, false);
-                    }
+                    // Trigger odometer animation
+                    spinDigit(index, this.value);
                     
                     updateHiddenInput();
                     
@@ -435,12 +372,12 @@
                         
                         if (this.value) {
                             // If current box has value, clear it
-                            flipDigit(index, '', true);
+                            spinDigit(index, '', true);
                             this.value = '';
                         } else if (index > 0) {
                             // If current box is empty, move to previous and clear it
                             boxes[index - 1].focus();
-                            flipDigit(index - 1, '', true);
+                            spinDigit(index - 1, '', true);
                             boxes[index - 1].value = '';
                         }
                         
@@ -450,7 +387,7 @@
                     // Delete key - clear current box
                     if (e.key === 'Delete') {
                         e.preventDefault();
-                        flipDigit(index, '', true);
+                        spinDigit(index, '', true);
                         this.value = '';
                         updateHiddenInput();
                     }
@@ -489,7 +426,8 @@
                     pastedData.split('').forEach((digit, i) => {
                         if (index + i < boxes.length) {
                             boxes[index + i].value = digit;
-                            flipDigit(index + i, digit, false);
+                            // Stagger spin animations for a cool cascade effect
+                            setTimeout(() => spinDigit(index + i, digit), i * 80);
                         }
                     });
                     
@@ -511,7 +449,7 @@
                 if (e.key === 'Backspace') {
                     e.preventDefault();
                     boxes[5].focus();
-                    flipDigit(5, '', true);
+                    spinDigit(5, '', true);
                     boxes[5].value = '';
                     updateHiddenInput();
                 }
