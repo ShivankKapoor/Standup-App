@@ -147,7 +147,7 @@
             height: 100%;
             position: relative;
             transform-style: preserve-3d;
-            transition: transform 0.4s cubic-bezier(0.4, 0.0, 0.2, 1);
+            transition: transform 0.20s cubic-bezier(0.4, 0.0, 0.2, 1);
         }
         
         .flip-card.flipping .flip-card-inner {
@@ -257,7 +257,7 @@
         <div class="login-box">
             <div class="login-header">
                 <h1>🔐 Two-Factor Authentication</h1>
-                <p>Enter the 6-digit code from Google Authenticator</p>
+                <p>Enter the 6-digit code</p>
             </div>
             
             <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
@@ -386,9 +386,9 @@
                     
                     // Re-enable transition
                     setTimeout(() => {
-                        flipInner.style.transition = 'transform 0.4s cubic-bezier(0.4, 0.0, 0.2, 1)';
+                        flipInner.style.transition = 'transform 0.20s cubic-bezier(0.4, 0.0, 0.2, 1)';
                     }, 50);
-                }, 400);
+                }, 200);
             }
             
             function updateHiddenInput() {
