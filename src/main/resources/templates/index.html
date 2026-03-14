@@ -375,6 +375,33 @@
             border-color: var(--primary);
         }
         
+        .weekend-toggle {
+            display: flex;
+            justify-content: center;
+            margin-bottom: var(--spacing-md);
+        }
+        
+        .weekend-toggle-label {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+            font-size: 14px;
+            color: var(--text-muted);
+            cursor: pointer;
+            user-select: none;
+        }
+        
+        .weekend-toggle-label:hover {
+            color: var(--text);
+        }
+        
+        .weekend-toggle-label input[type="checkbox"] {
+            accent-color: var(--primary);
+            width: 15px;
+            height: 15px;
+            cursor: pointer;
+        }
+        
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -806,6 +833,13 @@
                 <button class="period-btn" onclick="changePeriod(9999)" data-days="9999">All</button>
             </div>
             
+            <div class="weekend-toggle">
+                <label class="weekend-toggle-label">
+                    <input type="checkbox" id="hide-weekends-checkbox" onchange="renderHeatmap(heatmapData)">
+                    Hide Weekends
+                </label>
+            </div>
+            
             <div class="stats-grid" id="stats-grid">
                 <!-- Stats will be populated by JavaScript -->
             </div>
@@ -975,6 +1009,10 @@
         }
         
         function renderHeatmap(data) {
+            if (!data) return;
+            const hideWeekends = document.getElementById('hide-weekends-checkbox').checked;
+            const numDayRows = hideWeekends ? 5 : 7;
+            
             // Render stats
             const statsGrid = document.getElementById('stats-grid');
             statsGrid.innerHTML = `
@@ -1014,25 +1052,32 @@
                 return new Date(year, month - 1, day);
             }
             
-            data.days.forEach(day => {
+            // Filter out weekends if checkbox is checked (dayOfWeek 0=Sun, 6=Sat)
+            const visibleDays = hideWeekends
+                ? data.days.filter(d => d.dayOfWeek !== 0 && d.dayOfWeek !== 6)
+                : data.days;
+            
+            const firstDate = parseLocalDate(data.days[0].date);
+            
+            visibleDays.forEach(day => {
                 const date = parseLocalDate(day.date);
                 // Calculate week number from start date
-                const firstDate = parseLocalDate(data.days[0].date);
                 const daysDiff = Math.floor((date - firstDate) / (1000 * 60 * 60 * 24));
                 const weekNum = Math.floor(daysDiff / 7);
                 
                 if (!weekMap.has(weekNum)) {
-                    weekMap.set(weekNum, new Array(7).fill(null));
+                    weekMap.set(weekNum, new Array(numDayRows).fill(null));
                 }
                 
-                // Place day in correct position based on its dayOfWeek
-                weekMap.get(weekNum)[day.dayOfWeek] = day;
+                // For weekdays-only mode: Mon(1)->row0, Tue(2)->row1, ..., Fri(5)->row4
+                const rowIndex = hideWeekends ? day.dayOfWeek - 1 : day.dayOfWeek;
+                weekMap.get(weekNum)[rowIndex] = day;
             });
             
             // Convert map to array
             const maxWeek = Math.max(...weekMap.keys());
             for (let i = 0; i <= maxWeek; i++) {
-                weeks.push(weekMap.get(i) || new Array(7).fill(null));
+                weeks.push(weekMap.get(i) || new Array(numDayRows).fill(null));
             }
             
             // Calculate dynamic cell size based on number of weeks
@@ -1052,12 +1097,14 @@
             // Render heatmap (rotate: weeks as columns, days as rows)
             heatmapGrid.style.display = 'grid';
             heatmapGrid.style.gridTemplateColumns = '32px ' + 'repeat(' + weeks.length + ', ' + cellSize + 'px)';
-            heatmapGrid.style.gridTemplateRows = 'repeat(7, ' + cellSize + 'px)';
+            heatmapGrid.style.gridTemplateRows = 'repeat(' + numDayRows + ', ' + cellSize + 'px)';
             heatmapGrid.style.gap = gap + 'px';
             
             // Day labels
-            const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-            for (let dayNum = 0; dayNum < 7; dayNum++) {
+            const dayLabels = hideWeekends
+                ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
+                : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            for (let dayNum = 0; dayNum < numDayRows; dayNum++) {
                 const label = document.createElement('div');
                 label.className = 'month-label';
                 label.textContent = dayLabels[dayNum];
