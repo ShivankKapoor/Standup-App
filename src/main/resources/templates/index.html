@@ -155,6 +155,20 @@
             letter-spacing: 1px;
         }
         
+        .weather-city {
+            display: none;
+            font-size: 12px;
+            font-weight: var(--font-weight-medium);
+            color: rgba(255, 255, 255, 0.6);
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            margin-top: 3px;
+        }
+        
+        .weather-city.loaded {
+            display: block;
+        }
+        
         .calendar-nav {
             display: flex;
             justify-content: space-between;
@@ -791,6 +805,7 @@
                 <div class="current-date" id="current-date">Loading date...</div>
                 <div class="weather-display" id="weather-display"></div>
             </div>
+            <div class="weather-city" id="weather-city"></div>
         </div>
         
         <div class="calendar-nav">
@@ -956,22 +971,45 @@
                 async function(pos) {
                     try {
                         const { latitude, longitude } = pos.coords;
-                        const url = `https://api.open-meteo.com/v1/forecast` +
+                        const weatherUrl = `https://api.open-meteo.com/v1/forecast` +
                             `?latitude=${latitude}&longitude=${longitude}` +
                             `&current=temperature_2m,weathercode` +
                             `&temperature_unit=fahrenheit&timezone=auto`;
-                        const resp = await fetch(url);
-                        if (!resp.ok) return;
-                        const data = await resp.json();
-                        const temp = Math.round(data.current.temperature_2m);
-                        const { emoji, label } = getWeatherInfo(data.current.weathercode);
-                        const el = document.getElementById('weather-display');
-                        if (!el) return;
-                        el.innerHTML =
-                            `<span>${emoji}</span>` +
-                            (label ? `<span>${label}</span>` : '') +
-                            `<span class="weather-temp">${temp}°F</span>`;
-                        el.classList.add('loaded');
+                        const geoUrl = `https://nominatim.openstreetmap.org/reverse` +
+                            `?format=json&lat=${latitude}&lon=${longitude}`;
+
+                        const [weatherResp, geoResp] = await Promise.all([
+                            fetch(weatherUrl),
+                            fetch(geoUrl, { headers: { 'Accept-Language': 'en' } })
+                        ]);
+
+                        if (weatherResp.ok) {
+                            const data = await weatherResp.json();
+                            const temp = Math.round(data.current.temperature_2m);
+                            const { emoji, label } = getWeatherInfo(data.current.weathercode);
+                            const el = document.getElementById('weather-display');
+                            if (el) {
+                                el.innerHTML =
+                                    `<span>${emoji}</span>` +
+                                    (label ? `<span>${label}</span>` : '') +
+                                    `<span class="weather-temp">${temp}°F</span>`;
+                                el.classList.add('loaded');
+                            }
+                        }
+
+                        if (geoResp.ok) {
+                            const geo = await geoResp.json();
+                            const addr = geo.address || {};
+                            const city = addr.city || addr.town || addr.village || addr.county || '';
+                            const state = addr.state || '';
+                            const country = addr.country_code ? addr.country_code.toUpperCase() : (addr.country || '');
+                            const parts = [city, state, country].filter(Boolean);
+                            const cityEl = document.getElementById('weather-city');
+                            if (cityEl && parts.length) {
+                                cityEl.textContent = '📍 ' + parts.join(', ');
+                                cityEl.classList.add('loaded');
+                            }
+                        }
                     } catch (e) { /* silent on fetch error */ }
                 },
                 function() { /* geolocation denied — stay hidden */ }
