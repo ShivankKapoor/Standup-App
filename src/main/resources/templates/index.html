@@ -191,6 +191,29 @@
             color: #000000;
         }
         
+        .weather-display {
+            display: none;
+            align-items: center;
+            gap: 5px;
+            font-size: 14px;
+            font-weight: var(--font-weight-medium);
+            color: rgba(255, 255, 255, 0.85);
+            background: rgba(255, 255, 255, 0.12);
+            padding: 3px 10px;
+            border-radius: var(--border-radius-sm);
+            white-space: nowrap;
+            backdrop-filter: blur(10px);
+        }
+        
+        .weather-display.loaded {
+            display: flex;
+        }
+        
+        .weather-temp {
+            color: #ffffff;
+            font-weight: var(--font-weight-bold);
+        }
+        
         .calendar {
             padding: var(--spacing-lg);
             flex: 1;
@@ -766,6 +789,7 @@
             <div class="time-date-container">
                 <div class="live-time" id="live-time">Loading...</div>
                 <div class="current-date" id="current-date">Loading date...</div>
+                <div class="weather-display" id="weather-display"></div>
             </div>
         </div>
         
@@ -910,6 +934,51 @@
         // Initialize time updates
         updateTime();
         setInterval(updateTime, 1000);
+        
+        // Weather via Browser Geolocation + open-meteo (no API key needed)
+        function getWeatherInfo(code) {
+            if (code === 0)                    return { emoji: '☀️',  label: 'Clear' };
+            if (code <= 2)                     return { emoji: '⛅',  label: 'Partly Cloudy' };
+            if (code === 3)                    return { emoji: '☁️',  label: 'Overcast' };
+            if (code >= 45 && code <= 48)      return { emoji: '🌫️', label: 'Foggy' };
+            if (code >= 51 && code <= 57)      return { emoji: '🌦️', label: 'Drizzle' };
+            if (code >= 61 && code <= 67)      return { emoji: '🌧️', label: 'Rain' };
+            if (code >= 71 && code <= 77)      return { emoji: '❄️',  label: 'Snow' };
+            if (code >= 80 && code <= 82)      return { emoji: '🌨️', label: 'Showers' };
+            if (code === 85 || code === 86)    return { emoji: '🌨️', label: 'Snow Showers' };
+            if (code >= 95 && code <= 99)      return { emoji: '⛈️',  label: 'Thunderstorm' };
+            return { emoji: '🌡️', label: '' };
+        }
+        
+        async function initWeather() {
+            if (!navigator.geolocation) return;
+            navigator.geolocation.getCurrentPosition(
+                async function(pos) {
+                    try {
+                        const { latitude, longitude } = pos.coords;
+                        const url = `https://api.open-meteo.com/v1/forecast` +
+                            `?latitude=${latitude}&longitude=${longitude}` +
+                            `&current=temperature_2m,weathercode` +
+                            `&temperature_unit=fahrenheit&timezone=auto`;
+                        const resp = await fetch(url);
+                        if (!resp.ok) return;
+                        const data = await resp.json();
+                        const temp = Math.round(data.current.temperature_2m);
+                        const { emoji, label } = getWeatherInfo(data.current.weathercode);
+                        const el = document.getElementById('weather-display');
+                        if (!el) return;
+                        el.innerHTML =
+                            `<span>${emoji}</span>` +
+                            (label ? `<span>${label}</span>` : '') +
+                            `<span class="weather-temp">${temp}°F</span>`;
+                        el.classList.add('loaded');
+                    } catch (e) { /* silent on fetch error */ }
+                },
+                function() { /* geolocation denied — stay hidden */ }
+            );
+        }
+        
+        initWeather();
         
         function navigateToEntry(dateString) {
             window.location.href = '/entry/' + dateString;
