@@ -951,9 +951,10 @@
         setInterval(updateTime, 1000);
         
         // Weather via Browser Geolocation + open-meteo (no API key needed)
-        function getWeatherInfo(code) {
-            if (code === 0)                    return { emoji: '☀️',  label: 'Clear' };
-            if (code <= 2)                     return { emoji: '⛅',  label: 'Partly Cloudy' };
+        function getWeatherInfo(code, isDay) {
+            if (code === 0)                    return { emoji: isDay ? '☀️'  : '🌕',  label: 'Clear' };
+            if (code === 1)                    return { emoji: isDay ? '🌤️' : '🌙',  label: 'Mainly Clear' };
+            if (code === 2)                    return { emoji: isDay ? '⛅'  : '🌙',  label: 'Partly Cloudy' };
             if (code === 3)                    return { emoji: '☁️',  label: 'Overcast' };
             if (code >= 45 && code <= 48)      return { emoji: '🌫️', label: 'Foggy' };
             if (code >= 51 && code <= 57)      return { emoji: '🌦️', label: 'Drizzle' };
@@ -973,7 +974,7 @@
                         const { latitude, longitude } = pos.coords;
                         const weatherUrl = `https://api.open-meteo.com/v1/forecast` +
                             `?latitude=${latitude}&longitude=${longitude}` +
-                            `&current=temperature_2m,weathercode` +
+                            `&current=temperature_2m,weathercode,is_day` +
                             `&temperature_unit=fahrenheit&timezone=auto`;
                         const geoUrl = `https://nominatim.openstreetmap.org/reverse` +
                             `?format=json&lat=${latitude}&lon=${longitude}`;
@@ -986,7 +987,7 @@
                         if (weatherResp.ok) {
                             const data = await weatherResp.json();
                             const temp = Math.round(data.current.temperature_2m);
-                            const { emoji, label } = getWeatherInfo(data.current.weathercode);
+                            const { emoji, label } = getWeatherInfo(data.current.weathercode, data.current.is_day === 1);
                             const el = document.getElementById('weather-display');
                             if (el) {
                                 el.innerHTML =
