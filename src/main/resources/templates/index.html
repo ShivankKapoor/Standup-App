@@ -155,6 +155,20 @@
             letter-spacing: 1px;
         }
         
+        .weather-city {
+            display: none;
+            font-size: 12px;
+            font-weight: var(--font-weight-medium);
+            color: rgba(255, 255, 255, 0.6);
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            margin-top: 3px;
+        }
+        
+        .weather-city.loaded {
+            display: block;
+        }
+        
         .calendar-nav {
             display: flex;
             justify-content: space-between;
@@ -189,6 +203,29 @@
             font-size: 20px;
             font-weight: var(--font-weight-semibold);
             color: #000000;
+        }
+        
+        .weather-display {
+            display: none;
+            align-items: center;
+            gap: 5px;
+            font-size: 14px;
+            font-weight: var(--font-weight-medium);
+            color: rgba(255, 255, 255, 0.85);
+            background: rgba(255, 255, 255, 0.12);
+            padding: 3px 10px;
+            border-radius: var(--border-radius-sm);
+            white-space: nowrap;
+            backdrop-filter: blur(10px);
+        }
+        
+        .weather-display.loaded {
+            display: flex;
+        }
+        
+        .weather-temp {
+            color: #ffffff;
+            font-weight: var(--font-weight-bold);
         }
         
         .calendar {
@@ -373,6 +410,33 @@
             background: var(--primary);
             color: var(--background);
             border-color: var(--primary);
+        }
+        
+        .weekend-toggle {
+            display: flex;
+            justify-content: center;
+            margin-bottom: var(--spacing-md);
+        }
+        
+        .weekend-toggle-label {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+            font-size: 14px;
+            color: var(--text-muted);
+            cursor: pointer;
+            user-select: none;
+        }
+        
+        .weekend-toggle-label:hover {
+            color: var(--text);
+        }
+        
+        .weekend-toggle-label input[type="checkbox"] {
+            accent-color: var(--primary);
+            width: 15px;
+            height: 15px;
+            cursor: pointer;
         }
         
         .stats-grid {
@@ -739,7 +803,9 @@
             <div class="time-date-container">
                 <div class="live-time" id="live-time">Loading...</div>
                 <div class="current-date" id="current-date">Loading date...</div>
+                <div class="weather-display" id="weather-display"></div>
             </div>
+            <div class="weather-city" id="weather-city"></div>
         </div>
         
         <div class="calendar-nav">
@@ -804,6 +870,13 @@
                 <button class="period-btn" onclick="changePeriod(180)" data-days="180">180D</button>
                 <button class="period-btn active" onclick="changePeriod(365)" data-days="365">1Y</button>
                 <button class="period-btn" onclick="changePeriod(9999)" data-days="9999">All</button>
+            </div>
+            
+            <div class="weekend-toggle">
+                <label class="weekend-toggle-label">
+                    <input type="checkbox" id="hide-weekends-checkbox" onchange="renderHeatmap(heatmapData)">
+                    Hide Weekends
+                </label>
             </div>
             
             <div class="stats-grid" id="stats-grid">
@@ -876,6 +949,75 @@
         // Initialize time updates
         updateTime();
         setInterval(updateTime, 1000);
+        
+        // Weather via Browser Geolocation + open-meteo (no API key needed)
+        function getWeatherInfo(code, isDay) {
+            if (code === 0)                    return { emoji: isDay ? '☀️'  : '🌕',  label: 'Clear' };
+            if (code === 1)                    return { emoji: isDay ? '🌤️' : '🌙',  label: 'Mainly Clear' };
+            if (code === 2)                    return { emoji: isDay ? '⛅'  : '🌙',  label: 'Partly Cloudy' };
+            if (code === 3)                    return { emoji: '☁️',  label: 'Overcast' };
+            if (code >= 45 && code <= 48)      return { emoji: '🌫️', label: 'Foggy' };
+            if (code >= 51 && code <= 57)      return { emoji: '🌦️', label: 'Drizzle' };
+            if (code >= 61 && code <= 67)      return { emoji: '🌧️', label: 'Rain' };
+            if (code >= 71 && code <= 77)      return { emoji: '❄️',  label: 'Snow' };
+            if (code >= 80 && code <= 82)      return { emoji: '🌨️', label: 'Showers' };
+            if (code === 85 || code === 86)    return { emoji: '🌨️', label: 'Snow Showers' };
+            if (code >= 95 && code <= 99)      return { emoji: '⛈️',  label: 'Thunderstorm' };
+            return { emoji: '🌡️', label: '' };
+        }
+        
+        async function initWeather() {
+            if (!navigator.geolocation) return;
+            navigator.geolocation.getCurrentPosition(
+                async function(pos) {
+                    try {
+                        const { latitude, longitude } = pos.coords;
+                        const weatherUrl = `https://api.open-meteo.com/v1/forecast` +
+                            `?latitude=${latitude}&longitude=${longitude}` +
+                            `&current=temperature_2m,weathercode,is_day` +
+                            `&temperature_unit=fahrenheit&timezone=auto`;
+                        const geoUrl = `https://nominatim.openstreetmap.org/reverse` +
+                            `?format=json&lat=${latitude}&lon=${longitude}`;
+
+                        const [weatherResp, geoResp] = await Promise.all([
+                            fetch(weatherUrl),
+                            fetch(geoUrl, { headers: { 'Accept-Language': 'en' } })
+                        ]);
+
+                        if (weatherResp.ok) {
+                            const data = await weatherResp.json();
+                            const temp = Math.round(data.current.temperature_2m);
+                            const { emoji, label } = getWeatherInfo(data.current.weathercode, data.current.is_day === 1);
+                            const el = document.getElementById('weather-display');
+                            if (el) {
+                                el.innerHTML =
+                                    `<span>${emoji}</span>` +
+                                    (label ? `<span>${label}</span>` : '') +
+                                    `<span class="weather-temp">${temp}°F</span>`;
+                                el.classList.add('loaded');
+                            }
+                        }
+
+                        if (geoResp.ok) {
+                            const geo = await geoResp.json();
+                            const addr = geo.address || {};
+                            const city = addr.city || addr.town || addr.village || addr.county || '';
+                            const state = addr.state || '';
+                            const country = addr.country_code ? addr.country_code.toUpperCase() : (addr.country || '');
+                            const parts = [city, state, country].filter(Boolean);
+                            const cityEl = document.getElementById('weather-city');
+                            if (cityEl && parts.length) {
+                                cityEl.textContent = '📍 ' + parts.join(', ');
+                                cityEl.classList.add('loaded');
+                            }
+                        }
+                    } catch (e) { /* silent on fetch error */ }
+                },
+                function() { /* geolocation denied — stay hidden */ }
+            );
+        }
+        
+        initWeather();
         
         function navigateToEntry(dateString) {
             window.location.href = '/entry/' + dateString;
@@ -975,6 +1117,10 @@
         }
         
         function renderHeatmap(data) {
+            if (!data) return;
+            const hideWeekends = document.getElementById('hide-weekends-checkbox').checked;
+            const numDayRows = hideWeekends ? 5 : 7;
+            
             // Render stats
             const statsGrid = document.getElementById('stats-grid');
             statsGrid.innerHTML = `
@@ -1014,25 +1160,32 @@
                 return new Date(year, month - 1, day);
             }
             
-            data.days.forEach(day => {
+            // Filter out weekends if checkbox is checked (dayOfWeek 0=Sun, 6=Sat)
+            const visibleDays = hideWeekends
+                ? data.days.filter(d => d.dayOfWeek !== 0 && d.dayOfWeek !== 6)
+                : data.days;
+            
+            const firstDate = parseLocalDate(data.days[0].date);
+            
+            visibleDays.forEach(day => {
                 const date = parseLocalDate(day.date);
                 // Calculate week number from start date
-                const firstDate = parseLocalDate(data.days[0].date);
                 const daysDiff = Math.floor((date - firstDate) / (1000 * 60 * 60 * 24));
                 const weekNum = Math.floor(daysDiff / 7);
                 
                 if (!weekMap.has(weekNum)) {
-                    weekMap.set(weekNum, new Array(7).fill(null));
+                    weekMap.set(weekNum, new Array(numDayRows).fill(null));
                 }
                 
-                // Place day in correct position based on its dayOfWeek
-                weekMap.get(weekNum)[day.dayOfWeek] = day;
+                // For weekdays-only mode: Mon(1)->row0, Tue(2)->row1, ..., Fri(5)->row4
+                const rowIndex = hideWeekends ? day.dayOfWeek - 1 : day.dayOfWeek;
+                weekMap.get(weekNum)[rowIndex] = day;
             });
             
             // Convert map to array
             const maxWeek = Math.max(...weekMap.keys());
             for (let i = 0; i <= maxWeek; i++) {
-                weeks.push(weekMap.get(i) || new Array(7).fill(null));
+                weeks.push(weekMap.get(i) || new Array(numDayRows).fill(null));
             }
             
             // Calculate dynamic cell size based on number of weeks
@@ -1052,12 +1205,14 @@
             // Render heatmap (rotate: weeks as columns, days as rows)
             heatmapGrid.style.display = 'grid';
             heatmapGrid.style.gridTemplateColumns = '32px ' + 'repeat(' + weeks.length + ', ' + cellSize + 'px)';
-            heatmapGrid.style.gridTemplateRows = 'repeat(7, ' + cellSize + 'px)';
+            heatmapGrid.style.gridTemplateRows = 'repeat(' + numDayRows + ', ' + cellSize + 'px)';
             heatmapGrid.style.gap = gap + 'px';
             
             // Day labels
-            const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-            for (let dayNum = 0; dayNum < 7; dayNum++) {
+            const dayLabels = hideWeekends
+                ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
+                : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            for (let dayNum = 0; dayNum < numDayRows; dayNum++) {
                 const label = document.createElement('div');
                 label.className = 'month-label';
                 label.textContent = dayLabels[dayNum];
