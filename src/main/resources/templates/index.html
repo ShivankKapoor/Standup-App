@@ -155,14 +155,35 @@
             letter-spacing: 1px;
         }
         
+        .weather-box {
+            position: fixed;
+            top: var(--spacing-md);
+            left: var(--spacing-md);
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 2px;
+            background: rgba(255, 255, 255, 0.97);
+            padding: 8px 14px;
+            border-radius: var(--border-radius-md);
+            box-shadow: 0 1px 8px rgba(0, 0, 0, 0.10);
+            backdrop-filter: blur(10px);
+            border-left: 3px solid var(--secondary);
+            min-width: 160px;
+        }
+
+        .weather-box.loaded {
+            display: flex;
+        }
+        
         .weather-city {
             display: none;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: var(--font-weight-medium);
-            color: rgba(255, 255, 255, 0.6);
-            letter-spacing: 1.5px;
-            text-transform: uppercase;
-            margin-top: 3px;
+            color: #999;
+            margin-top: 0;
+            padding-left: 28px;
         }
         
         .weather-city.loaded {
@@ -208,15 +229,11 @@
         .weather-display {
             display: none;
             align-items: center;
-            gap: 5px;
-            font-size: 14px;
-            font-weight: var(--font-weight-medium);
-            color: rgba(255, 255, 255, 0.85);
-            background: rgba(255, 255, 255, 0.12);
-            padding: 3px 10px;
-            border-radius: var(--border-radius-sm);
+            gap: 6px;
+            font-size: 18px;
+            font-weight: var(--font-weight-bold);
+            color: var(--text);
             white-space: nowrap;
-            backdrop-filter: blur(10px);
         }
         
         .weather-display.loaded {
@@ -224,7 +241,7 @@
         }
         
         .weather-temp {
-            color: #ffffff;
+            color: var(--text);
             font-weight: var(--font-weight-bold);
         }
         
@@ -797,15 +814,18 @@
         <span class="session-timer-text">15:00</span>
     </div>
 
+    <div class="weather-box" id="weather-box">
+        <div class="weather-display" id="weather-display"></div>
+        <div class="weather-city" id="weather-city"></div>
+    </div>
+
     <div class="container">
         <div class="header">
             <h1>📋 Standup App</h1>
             <div class="time-date-container">
                 <div class="live-time" id="live-time">Loading...</div>
                 <div class="current-date" id="current-date">Loading date...</div>
-                <div class="weather-display" id="weather-display"></div>
             </div>
-            <div class="weather-city" id="weather-city"></div>
         </div>
         
         <div class="calendar-nav">
@@ -874,7 +894,7 @@
             
             <div class="weekend-toggle">
                 <label class="weekend-toggle-label">
-                    <input type="checkbox" id="hide-weekends-checkbox" onchange="renderHeatmap(heatmapData)">
+                    <input type="checkbox" id="hide-weekends-checkbox" onchange="onWeekendToggle()">
                     Hide Weekends
                 </label>
             </div>
@@ -966,8 +986,41 @@
             return { emoji: '🌡️', label: '' };
         }
         
+        const WEATHER_CACHE_KEY = 'standup_weather_cache';
+        const WEATHER_CACHE_TTL = 30 * 60 * 1000; // 30 minutes
+
+        function applyWeatherData(emoji, temp, city) {
+            const el = document.getElementById('weather-display');
+            if (el) {
+                el.innerHTML = `<span>${emoji}</span><span class="weather-temp">${temp}°F</span>`;
+                el.classList.add('loaded');
+                const box = document.getElementById('weather-box');
+                if (box) box.classList.add('loaded');
+            }
+            if (city) {
+                const cityEl = document.getElementById('weather-city');
+                if (cityEl) {
+                    cityEl.textContent = city;
+                    cityEl.classList.add('loaded');
+                }
+            }
+        }
+
         async function initWeather() {
             if (!navigator.geolocation) return;
+
+            // Use cache if still fresh
+            try {
+                const raw = localStorage.getItem(WEATHER_CACHE_KEY);
+                if (raw) {
+                    const cached = JSON.parse(raw);
+                    if (Date.now() - cached.ts < WEATHER_CACHE_TTL) {
+                        applyWeatherData(cached.emoji, cached.temp, cached.city);
+                        return;
+                    }
+                }
+            } catch (e) { /* ignore bad cache */ }
+
             navigator.geolocation.getCurrentPosition(
                 async function(pos) {
                     try {
@@ -984,32 +1037,27 @@
                             fetch(geoUrl, { headers: { 'Accept-Language': 'en' } })
                         ]);
 
+                        let emoji = '', temp = null, city = '';
+
                         if (weatherResp.ok) {
                             const data = await weatherResp.json();
-                            const temp = Math.round(data.current.temperature_2m);
-                            const { emoji, label } = getWeatherInfo(data.current.weathercode, data.current.is_day === 1);
-                            const el = document.getElementById('weather-display');
-                            if (el) {
-                                el.innerHTML =
-                                    `<span>${emoji}</span>` +
-                                    (label ? `<span>${label}</span>` : '') +
-                                    `<span class="weather-temp">${temp}°F</span>`;
-                                el.classList.add('loaded');
-                            }
+                            temp = Math.round(data.current.temperature_2m);
+                            ({ emoji } = getWeatherInfo(data.current.weathercode, data.current.is_day === 1));
                         }
 
                         if (geoResp.ok) {
                             const geo = await geoResp.json();
                             const addr = geo.address || {};
-                            const city = addr.city || addr.town || addr.village || addr.county || '';
-                            const state = addr.state || '';
-                            const country = addr.country_code ? addr.country_code.toUpperCase() : (addr.country || '');
-                            const parts = [city, state, country].filter(Boolean);
-                            const cityEl = document.getElementById('weather-city');
-                            if (cityEl && parts.length) {
-                                cityEl.textContent = '📍 ' + parts.join(', ');
-                                cityEl.classList.add('loaded');
-                            }
+                            const c = addr.city || addr.town || addr.village || addr.county || '';
+                            const s = addr.state || '';
+                            city = [c, s].filter(Boolean).join(', ');
+                        }
+
+                        if (temp !== null) {
+                            applyWeatherData(emoji, temp, city);
+                            try {
+                                localStorage.setItem(WEATHER_CACHE_KEY, JSON.stringify({ emoji, temp, city, ts: Date.now() }));
+                            } catch (e) { /* storage full */ }
                         }
                     } catch (e) { /* silent on fetch error */ }
                 },
@@ -1060,6 +1108,20 @@
         let heatmapData = null;
         let currentPeriod = 365; // Default to 1 year
         
+        function onWeekendToggle() {
+            const checked = document.getElementById('hide-weekends-checkbox').checked;
+            document.cookie = `hide_weekends=${checked ? '1' : '0'};path=/;max-age=${60 * 60 * 24 * 365}`;
+            renderHeatmap(heatmapData);
+        }
+
+        (function restoreWeekendPref() {
+            const match = document.cookie.split('; ').find(c => c.startsWith('hide_weekends='));
+            if (match && match.split('=')[1] === '1') {
+                const cb = document.getElementById('hide-weekends-checkbox');
+                if (cb) cb.checked = true;
+            }
+        })();
+
         async function showHeatmap() {
             const modal = document.getElementById('heatmap-modal');
             modal.classList.add('active');
