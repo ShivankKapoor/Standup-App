@@ -894,7 +894,7 @@
             
             <div class="weekend-toggle">
                 <label class="weekend-toggle-label">
-                    <input type="checkbox" id="hide-weekends-checkbox" onchange="renderHeatmap(heatmapData)">
+                    <input type="checkbox" id="hide-weekends-checkbox" onchange="onWeekendToggle()">
                     Hide Weekends
                 </label>
             </div>
@@ -1108,6 +1108,20 @@
         let heatmapData = null;
         let currentPeriod = 365; // Default to 1 year
         
+        function onWeekendToggle() {
+            const checked = document.getElementById('hide-weekends-checkbox').checked;
+            document.cookie = `hide_weekends=${checked ? '1' : '0'};path=/;max-age=${60 * 60 * 24 * 365}`;
+            renderHeatmap(heatmapData);
+        }
+
+        (function restoreWeekendPref() {
+            const match = document.cookie.split('; ').find(c => c.startsWith('hide_weekends='));
+            if (match && match.split('=')[1] === '1') {
+                const cb = document.getElementById('hide-weekends-checkbox');
+                if (cb) cb.checked = true;
+            }
+        })();
+
         async function showHeatmap() {
             const modal = document.getElementById('heatmap-modal');
             modal.classList.add('active');
