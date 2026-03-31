@@ -1006,9 +1006,60 @@
             }
         }
 
-        async function initWeather() {
-            if (!navigator.geolocation) return;
+        async function fetchWeatherByCoords(latitude, longitude, fallbackCity) {
+            try {
+                const weatherUrl = `https://api.open-meteo.com/v1/forecast` +
+                    `?latitude=${latitude}&longitude=${longitude}` +
+                    `&current=temperature_2m,weathercode,is_day` +
+                    `&temperature_unit=fahrenheit&timezone=auto`;
 
+                const fetches = [fetch(weatherUrl)];
+                if (!fallbackCity) {
+                    fetches.push(fetch(
+                        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`,
+                        { headers: { 'Accept-Language': 'en' } }
+                    ));
+                }
+
+                const [weatherResp, geoResp] = await Promise.all(fetches);
+
+                let emoji = '', temp = null, city = fallbackCity || '';
+
+                if (weatherResp.ok) {
+                    const data = await weatherResp.json();
+                    temp = Math.round(data.current.temperature_2m);
+                    ({ emoji } = getWeatherInfo(data.current.weathercode, data.current.is_day === 1));
+                }
+
+                if (geoResp && geoResp.ok) {
+                    const geo = await geoResp.json();
+                    const addr = geo.address || {};
+                    const c = addr.city || addr.town || addr.village || addr.county || '';
+                    const s = addr.state || '';
+                    city = [c, s].filter(Boolean).join(', ');
+                }
+
+                if (temp !== null) {
+                    applyWeatherData(emoji, temp, city);
+                    try {
+                        localStorage.setItem(WEATHER_CACHE_KEY, JSON.stringify({ emoji, temp, city, ts: Date.now() }));
+                    } catch (e) { /* storage full */ }
+                }
+            } catch (e) { /* silent on fetch error */ }
+        }
+
+        async function fetchWeatherByIP() {
+            try {
+                const resp = await fetch('https://ipapi.co/json/');
+                if (!resp.ok) return;
+                const data = await resp.json();
+                if (!data.latitude || !data.longitude) return;
+                const city = [data.city, data.region].filter(Boolean).join(', ');
+                await fetchWeatherByCoords(data.latitude, data.longitude, city);
+            } catch (e) { /* silent on fetch error */ }
+        }
+
+        async function initWeather() {
             // Use cache if still fresh
             try {
                 const raw = localStorage.getItem(WEATHER_CACHE_KEY);
@@ -1021,47 +1072,16 @@
                 }
             } catch (e) { /* ignore bad cache */ }
 
+            if (!navigator.geolocation) {
+                fetchWeatherByIP();
+                return;
+            }
+
             navigator.geolocation.getCurrentPosition(
                 async function(pos) {
-                    try {
-                        const { latitude, longitude } = pos.coords;
-                        const weatherUrl = `https://api.open-meteo.com/v1/forecast` +
-                            `?latitude=${latitude}&longitude=${longitude}` +
-                            `&current=temperature_2m,weathercode,is_day` +
-                            `&temperature_unit=fahrenheit&timezone=auto`;
-                        const geoUrl = `https://nominatim.openstreetmap.org/reverse` +
-                            `?format=json&lat=${latitude}&lon=${longitude}`;
-
-                        const [weatherResp, geoResp] = await Promise.all([
-                            fetch(weatherUrl),
-                            fetch(geoUrl, { headers: { 'Accept-Language': 'en' } })
-                        ]);
-
-                        let emoji = '', temp = null, city = '';
-
-                        if (weatherResp.ok) {
-                            const data = await weatherResp.json();
-                            temp = Math.round(data.current.temperature_2m);
-                            ({ emoji } = getWeatherInfo(data.current.weathercode, data.current.is_day === 1));
-                        }
-
-                        if (geoResp.ok) {
-                            const geo = await geoResp.json();
-                            const addr = geo.address || {};
-                            const c = addr.city || addr.town || addr.village || addr.county || '';
-                            const s = addr.state || '';
-                            city = [c, s].filter(Boolean).join(', ');
-                        }
-
-                        if (temp !== null) {
-                            applyWeatherData(emoji, temp, city);
-                            try {
-                                localStorage.setItem(WEATHER_CACHE_KEY, JSON.stringify({ emoji, temp, city, ts: Date.now() }));
-                            } catch (e) { /* storage full */ }
-                        }
-                    } catch (e) { /* silent on fetch error */ }
+                    await fetchWeatherByCoords(pos.coords.latitude, pos.coords.longitude, null);
                 },
-                function() { /* geolocation denied — stay hidden */ }
+                function() { fetchWeatherByIP(); }
             );
         }
         
