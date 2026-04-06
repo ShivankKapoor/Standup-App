@@ -37,4 +37,4 @@ data/Standups.txt
 logs/*
 
 ### Mac ###
-.DS_Store
+.DS_Storesrc/main/resources/keystore.p12
