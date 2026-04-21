@@ -273,6 +273,7 @@ html[data-theme="dark"] {
     --background-darker: #3a3a3a;
     --primary-light: rgba(105, 179, 231, 0.2);
     --secondary-light: rgba(255, 111, 0, 0.2);
+    --accent: #69b3e7;
     --accent-light: rgba(105, 179, 231, 0.15);
     --accent-dark: #4a8bc2;
     --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.4);

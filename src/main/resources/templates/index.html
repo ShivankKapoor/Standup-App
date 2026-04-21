@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" th:href="@{/images/favicon.ico}">
     <title>📋 Standup App</title>
     <script>(function(){var t=localStorage.getItem('standup_theme');document.documentElement.setAttribute('data-theme',t||'light');})();</script>
     <link rel="stylesheet" th:href="@{/css/theme.css}">
@@ -903,7 +904,7 @@
 
     <div class="container">
         <div class="header">
-            <h1>📋 Standup App</h1>
+            <h1><img th:src="@{/images/faviconPNG.png}" alt="Standup App" style="width:36px;height:36px;vertical-align:middle;margin-right:8px;">Standup App</h1>
             <div class="time-date-container">
                 <div class="live-time" id="live-time">Loading...</div>
                 <div class="current-date" id="current-date">Loading date...</div>
