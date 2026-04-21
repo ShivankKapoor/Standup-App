@@ -1058,19 +1058,25 @@
         setInterval(updateTime, 1000);
         
         // Weather via Browser Geolocation + open-meteo (no API key needed)
+        const METEOCONS_BASE = 'https://cdn.jsdelivr.net/npm/@bybas/weather-icons@2.0.0/production/fill/all/';
+
+        function weatherIcon(name) {
+            return `<img src="${METEOCONS_BASE}${name}.svg" width="48" height="48" style="vertical-align:middle;margin-right:6px;filter:drop-shadow(0 1px 3px rgba(0,0,0,0.25));" alt="">`;
+        }
+
         function getWeatherInfo(code, isDay) {
-            if (code === 0)                    return { emoji: isDay ? '☀️'  : '🌕',  label: 'Clear' };
-            if (code === 1)                    return { emoji: isDay ? '🌤️' : '🌙',  label: 'Mainly Clear' };
-            if (code === 2)                    return { emoji: isDay ? '⛅'  : '🌙',  label: 'Partly Cloudy' };
-            if (code === 3)                    return { emoji: '☁️',  label: 'Overcast' };
-            if (code >= 45 && code <= 48)      return { emoji: '🌫️', label: 'Foggy' };
-            if (code >= 51 && code <= 57)      return { emoji: '🌦️', label: 'Drizzle' };
-            if (code >= 61 && code <= 67)      return { emoji: '🌧️', label: 'Rain' };
-            if (code >= 71 && code <= 77)      return { emoji: '❄️',  label: 'Snow' };
-            if (code >= 80 && code <= 82)      return { emoji: '🌨️', label: 'Showers' };
-            if (code === 85 || code === 86)    return { emoji: '🌨️', label: 'Snow Showers' };
-            if (code >= 95 && code <= 99)      return { emoji: '⛈️',  label: 'Thunderstorm' };
-            return { emoji: '🌡️', label: '' };
+            if (code === 0)                    return { emoji: isDay ? weatherIcon('clear-day')           : weatherIcon('clear-night'),           label: 'Clear' };
+            if (code === 1)                    return { emoji: isDay ? weatherIcon('partly-cloudy-day')   : weatherIcon('partly-cloudy-night'),   label: 'Mainly Clear' };
+            if (code === 2)                    return { emoji: isDay ? weatherIcon('partly-cloudy-day')   : weatherIcon('partly-cloudy-night'),   label: 'Partly Cloudy' };
+            if (code === 3)                    return { emoji: weatherIcon('overcast'),                                                           label: 'Overcast' };
+            if (code >= 45 && code <= 48)      return { emoji: isDay ? weatherIcon('fog-day')            : weatherIcon('fog-night'),             label: 'Foggy' };
+            if (code >= 51 && code <= 57)      return { emoji: weatherIcon('drizzle'),                                                           label: 'Drizzle' };
+            if (code >= 61 && code <= 67)      return { emoji: weatherIcon('rain'),                                                              label: 'Rain' };
+            if (code >= 71 && code <= 77)      return { emoji: weatherIcon('snow'),                                                              label: 'Snow' };
+            if (code >= 80 && code <= 82)      return { emoji: weatherIcon('overcast-rain'),                                                     label: 'Showers' };
+            if (code === 85 || code === 86)    return { emoji: weatherIcon('overcast-snow'),                                                     label: 'Snow Showers' };
+            if (code >= 95 && code <= 99)      return { emoji: weatherIcon('thunderstorms-rain'),                                                label: 'Thunderstorm' };
+            return { emoji: weatherIcon('not-available'),                                                                                         label: '' };
         }
         
         const WEATHER_CACHE_KEY = 'standup_weather_cache';
