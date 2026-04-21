@@ -730,8 +730,42 @@
                 bottom: calc(var(--spacing-md) + 56px + 8px);
                 right: var(--spacing-md);
             }
+
+            .weather-box {
+                position: static;
+                align-self: center;
+                margin-top: var(--spacing-xs);
+                background: rgba(255, 255, 255, 0.15);
+                border-left-color: rgba(255, 255, 255, 0.6);
+                box-shadow: none;
+                min-width: unset;
+            }
+
+            .weather-box .weather-display,
+            .weather-city,
+            .weather-temp {
+                color: rgba(255, 255, 255, 0.95);
+            }
+
+            .heatmap-container {
+                padding: var(--spacing-md);
+                max-height: 95vh;
+            }
+
+            .heatmap-header {
+                flex-wrap: wrap;
+                gap: var(--spacing-sm);
+            }
+
+            .heatmap-header h2 {
+                font-size: 18px;
+            }
+
+            .stat-value {
+                font-size: 24px;
+            }
         }
-        
+
         @media (max-width: 480px) {
             body {
                 padding: var(--spacing-xs);
@@ -796,6 +830,14 @@
                 bottom: calc(var(--spacing-sm) + 56px + 8px);
                 right: var(--spacing-sm);
             }
+
+            .session-timer img {
+                display: none;
+            }
+
+            .session-timer {
+                padding: var(--spacing-xs) var(--spacing-sm);
+            }
         }
     </style>
 </head>
@@ -814,17 +856,16 @@
         <span class="session-timer-text">15:00</span>
     </div>
 
-    <div class="weather-box" id="weather-box">
-        <div class="weather-display" id="weather-display"></div>
-        <div class="weather-city" id="weather-city"></div>
-    </div>
-
     <div class="container">
         <div class="header">
             <h1>📋 Standup App</h1>
             <div class="time-date-container">
                 <div class="live-time" id="live-time">Loading...</div>
                 <div class="current-date" id="current-date">Loading date...</div>
+            </div>
+            <div class="weather-box" id="weather-box">
+                <div class="weather-display" id="weather-display"></div>
+                <div class="weather-city" id="weather-city"></div>
             </div>
         </div>
         
@@ -834,7 +875,7 @@
             <a th:href="@{/(month=${displayDate.plusMonths(1).format(T(java.time.format.DateTimeFormatter).ofPattern('yyyy-MM'))})}" class="nav-btn">Next →</a>
         </div>
         <!-- Color Key Legend -->
-    <div class="calendar-key" style="display: flex; gap: 1rem; justify-content: center; align-items: center; margin: 0.2rem 0 0.1rem 0;">
+    <div class="calendar-key" style="display: flex; flex-wrap: wrap; gap: 1rem; row-gap: 0.4rem; justify-content: center; align-items: center; margin: 0.2rem 0 0.1rem 0;">
             <span style="display: flex; align-items: center; gap: 0.3rem; font-size: 13px;">
                 <span style="width: 10px; height: 10px; background: var(--secondary); border-radius: 50%; display: inline-block;"></span>
                 Regular Entry
