@@ -263,6 +263,33 @@ body {
 .p-4 { padding: var(--spacing-lg); }
 .p-5 { padding: var(--spacing-xl); }
 
+/* Dark Mode Variables — Charcoal */
+html[data-theme="dark"] {
+    --text: #e0e0e0;
+    --background: #1e1e1e;
+    --text-light: rgba(224, 224, 224, 0.75);
+    --text-muted: rgba(224, 224, 224, 0.5);
+    --background-dark: #2d2d2d;
+    --background-darker: #3a3a3a;
+    --primary-light: rgba(105, 179, 231, 0.2);
+    --secondary-light: rgba(255, 111, 0, 0.2);
+    --accent: #69b3e7;
+    --accent-light: rgba(105, 179, 231, 0.15);
+    --accent-dark: #4a8bc2;
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.5);
+    --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.6);
+    --shadow-xl: 0 16px 32px rgba(0, 0, 0, 0.7);
+}
+
+[data-theme="dark"] body {
+    background: #121212;
+}
+
+[data-theme="dark"] .header {
+    background: linear-gradient(135deg, #FF6F00 0%, #2a2a2a 100%);
+}
+
 /* Mobile Responsive Design */
 @media (max-width: 768px) {
     .btn {
@@ -289,5 +316,57 @@ body {
     
     .actions .btn {
         width: 100%;
+    }
+}
+
+/* Theme Toggle Button */
+.theme-toggle-btn {
+    position: fixed;
+    bottom: var(--spacing-lg);
+    left: var(--spacing-lg);
+    z-index: 1001;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    width: 36px;
+    height: 36px;
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background var(--transition-normal);
+    backdrop-filter: blur(10px);
+    box-shadow: var(--shadow-md);
+}
+
+.theme-toggle-btn:hover {
+    background: rgba(255, 255, 255, 0.25);
+}
+
+[data-theme="dark"] .theme-toggle-btn {
+    background: var(--background-dark);
+    border-color: var(--background-darker);
+    color: var(--text);
+}
+
+[data-theme="dark"] .theme-toggle-btn:hover {
+    background: var(--background-darker);
+}
+
+@keyframes theme-toggle-spin {
+    0%   { transform: rotate(0deg) scale(1); }
+    40%  { transform: rotate(180deg) scale(0.7); }
+    100% { transform: rotate(360deg) scale(1); }
+}
+
+.theme-toggle-btn svg.is-animating {
+    animation: theme-toggle-spin 0.4s ease;
+}
+
+@media (max-width: 480px) {
+    .theme-toggle-btn {
+        bottom: var(--spacing-sm);
+        left: var(--spacing-sm);
     }
 }

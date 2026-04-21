@@ -3,8 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>📋 Standup App - Login</title>
+    <link rel="icon" type="image/x-icon" th:href="@{/images/favicon.ico}">
+    <title>Standup App - Login</title>
+    <script>(function(){var t=localStorage.getItem('standup_theme');document.documentElement.setAttribute('data-theme',t||'light');})();</script>
     <link rel="stylesheet" th:href="@{/css/theme.css}">
+    <script th:src="@{/js/theme.js}"></script>
     <style>
         body {
             background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
@@ -94,11 +97,11 @@
             .login-container {
                 padding: var(--spacing-md);
             }
-            
+
             .login-box {
                 padding: var(--spacing-lg);
             }
-            
+
             .login-header h1 {
                 font-size: 24px;
             }
@@ -106,10 +109,11 @@
     </style>
 </head>
 <body>
+    <button id="theme-toggle-btn" class="theme-toggle-btn" onclick="toggleTheme()"></button>
     <div class="login-container">
         <div class="login-box">
             <div class="login-header">
-                <h1>📋 Standup App</h1>
+                <h1><img th:src="@{/images/faviconPNG.png}" alt="Standup App" style="width:36px;height:36px;vertical-align:middle;margin-right:8px;">Standup App</h1>
                 <p>Please sign in to continue</p>
             </div>
             
