@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>📋 Standup Entry</title>
+    <script>(function(){var t=localStorage.getItem('standup_theme');document.documentElement.setAttribute('data-theme',t||'light');})();</script>
     <link rel="stylesheet" th:href="@{/css/theme.css}">
+    <script th:src="@{/js/theme.js}"></script>
     <style>
         body {
             background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
@@ -165,10 +167,14 @@
         }
         
         .btn-success {
-            background: linear-gradient(135deg, var(--success) 0%, #1e90ff 100%);
+            background: linear-gradient(135deg, var(--success) 0%, var(--primary) 100%);
             color: var(--background);
         }
-        
+
+        [data-theme="dark"] .session-timer {
+            background: rgba(26, 29, 46, 0.95);
+        }
+
         @media (max-width: 768px) {
             body {
                 padding: var(--spacing-md);
@@ -213,9 +219,14 @@
 </head>
 <body>
     <div class="logout-container">
-        <a href="/logout" class="logout-btn" id="logout-btn">🚪 Logout</a>
+        <a href="/logout" class="logout-btn" id="logout-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; margin-right:4px;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            Logout
+        </a>
     </div>
-    
+
+    <button id="theme-toggle-btn" class="theme-toggle-btn" onclick="toggleTheme()"></button>
+
     <div class="session-timer" id="session-timer">
         <img th:src="@{/images/hourglass.apng}" alt="Timer">
         <span class="session-timer-text">15:00</span>

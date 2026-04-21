@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>📋 Standup App</title>
+    <script>(function(){var t=localStorage.getItem('standup_theme');document.documentElement.setAttribute('data-theme',t||'light');})();</script>
     <link rel="stylesheet" th:href="@{/css/theme.css}">
+    <script th:src="@{/js/theme.js}"></script>
     <style>
         body {
             background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
@@ -223,7 +225,7 @@
         .month-year {
             font-size: 20px;
             font-weight: var(--font-weight-semibold);
-            color: #000000;
+            color: var(--text);
         }
         
         .weather-display {
@@ -839,17 +841,60 @@
                 padding: var(--spacing-xs) var(--spacing-sm);
             }
         }
+
+        [data-theme="dark"] .session-timer {
+            background: rgba(26, 29, 46, 0.95);
+        }
+
+        [data-theme="dark"] .weather-box {
+            background: rgba(26, 29, 46, 0.97);
+            border-left-color: var(--primary);
+        }
+
+        [data-theme="dark"] .weather-city {
+            color: var(--text-muted);
+        }
+
+        [data-theme="dark"] .weather-temp {
+            color: var(--text);
+        }
+
+        [data-theme="dark"] .weather-display {
+            color: var(--text);
+        }
+
+        [data-theme="dark"] .summary-btn {
+            background: rgba(26, 29, 46, 0.95);
+            color: var(--text);
+        }
+
+        [data-theme="dark"] .live-time {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        @media (max-width: 768px) {
+            [data-theme="dark"] .weather-box {
+                background: rgba(255, 255, 255, 0.1);
+                border-left-color: rgba(255, 255, 255, 0.5);
+            }
+        }
+
     </style>
 </head>
 <body>
     <div class="logout-container">
-        <a href="/logout" class="logout-btn" id="logout-btn">🚪 Logout</a>
+        <a href="/logout" class="logout-btn" id="logout-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; margin-right:4px;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            Logout
+        </a>
     </div>
-    
+
     <button class="summary-btn" onclick="showHeatmap()">
-        <span style="font-size: 20px;">📊</span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
         <span>Stats</span>
     </button>
+
+    <button id="theme-toggle-btn" class="theme-toggle-btn" onclick="toggleTheme()"></button>
     
     <div class="session-timer" id="session-timer">
         <img th:src="@{/images/hourglass.apng}" alt="Timer">
