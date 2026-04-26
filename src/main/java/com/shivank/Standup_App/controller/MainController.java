@@ -405,8 +405,8 @@ public class MainController {
             standupDataService.deleteStandup(entryDate);
             
             loggingService.logAppEvent("Entry deleted for date: " + date + " by user: " + currentUser);
-            
-            return "redirect:/";
+
+            return "redirect:/?deleted=true";
         } catch (DateTimeParseException e) {
             return "redirect:/";
         }
