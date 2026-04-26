@@ -390,7 +390,7 @@ public class MainController {
             
             loggingService.logAppEvent("Entry saved for date: " + date + " by user: " + currentUser);
             
-            return "redirect:/entry/" + date;
+            return "redirect:/entry/" + date + "?saved=true";
         } catch (DateTimeParseException e) {
             return "redirect:/";
         }

@@ -8,6 +8,7 @@
     <script>(function(){var t=localStorage.getItem('standup_theme');document.documentElement.setAttribute('data-theme',t||'light');})();</script>
     <link rel="stylesheet" th:href="@{/css/theme.css}">
     <script th:src="@{/js/theme.js}"></script>
+    <script th:src="@{/js/toast.js}"></script>
     <style>
         body {
             background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
@@ -304,6 +305,11 @@
         // Update timer every second
         updateTimer();
         setInterval(updateTimer, 1000);
+
+        if (new URLSearchParams(window.location.search).get('saved') === 'true') {
+            showToast('Entry saved', { type: 'success' });
+            history.replaceState(null, '', window.location.pathname);
+        }
     </script>
 </body>
 </html>
