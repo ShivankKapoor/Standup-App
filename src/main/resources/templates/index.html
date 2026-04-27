@@ -7,6 +7,7 @@
     <title> Standup App</title>
     <script>(function(){var t=localStorage.getItem('standup_theme');document.documentElement.setAttribute('data-theme',t||'light');})();</script>
     <link rel="stylesheet" th:href="@{/css/theme.css}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <script th:src="@{/js/theme.js}"></script>
     <script th:src="@{/js/toast.js}"></script>
     <style>
@@ -111,6 +112,7 @@
             padding: var(--spacing-md) var(--spacing-xl);
             text-align: center;
             flex-shrink: 0;
+            position: relative;
         }
         
         .header h1 {
@@ -160,10 +162,11 @@
         }
         
         .weather-box {
-            position: fixed;
-            top: var(--spacing-md);
+            position: absolute;
+            top: 50%;
             left: var(--spacing-md);
-            z-index: 1000;
+            transform: translateY(-50%);
+            z-index: 10;
             display: none;
             flex-direction: column;
             align-items: flex-start;
@@ -247,6 +250,21 @@
         .weather-temp {
             color: var(--text);
             font-weight: var(--font-weight-bold);
+        }
+
+        .weather-icon {
+            font-size: 20px;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+
+        @keyframes weather-spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .weather-spin {
+            display: inline-block;
+            animation: weather-spin 1s linear infinite;
         }
         
         .calendar {
@@ -722,6 +740,9 @@
             
             .header {
                 padding: var(--spacing-sm) var(--spacing-lg);
+                display: flex;
+                flex-direction: column;
+                align-items: center;
             }
             
             .month-year {
@@ -737,8 +758,11 @@
 
             .weather-box {
                 position: static;
+                transform: none;
                 align-self: center;
+                width: fit-content;
                 margin-top: var(--spacing-xs);
+                margin-bottom: var(--spacing-xs);
                 background: rgba(255, 255, 255, 0.15);
                 border-left-color: rgba(255, 255, 255, 0.6);
                 box-shadow: none;
@@ -1058,49 +1082,73 @@
         updateTime();
         setInterval(updateTime, 1000);
         
-        // Weather via Browser Geolocation + open-meteo (no API key needed)
-        const METEOCONS_BASE = 'https://cdn.jsdelivr.net/npm/@bybas/weather-icons@2.0.0/production/fill/all/';
-
-        function weatherIcon(name) {
-            return `<img src="${METEOCONS_BASE}${name}.svg" width="48" height="48" style="vertical-align:middle;margin-right:6px;filter:drop-shadow(0 1px 3px rgba(0,0,0,0.25));" alt="">`;
-        }
-
+        // Weather widget using Bootstrap Icons + open-meteo (no API key needed)
         function getWeatherInfo(code, isDay) {
-            if (code === 0)                    return { emoji: isDay ? weatherIcon('clear-day')           : weatherIcon('clear-night'),           label: 'Clear' };
-            if (code === 1)                    return { emoji: isDay ? weatherIcon('partly-cloudy-day')   : weatherIcon('partly-cloudy-night'),   label: 'Mainly Clear' };
-            if (code === 2)                    return { emoji: isDay ? weatherIcon('partly-cloudy-day')   : weatherIcon('partly-cloudy-night'),   label: 'Partly Cloudy' };
-            if (code === 3)                    return { emoji: weatherIcon('overcast'),                                                           label: 'Overcast' };
-            if (code >= 45 && code <= 48)      return { emoji: isDay ? weatherIcon('fog-day')            : weatherIcon('fog-night'),             label: 'Foggy' };
-            if (code >= 51 && code <= 57)      return { emoji: weatherIcon('drizzle'),                                                           label: 'Drizzle' };
-            if (code >= 61 && code <= 67)      return { emoji: weatherIcon('rain'),                                                              label: 'Rain' };
-            if (code >= 71 && code <= 77)      return { emoji: weatherIcon('snow'),                                                              label: 'Snow' };
-            if (code >= 80 && code <= 82)      return { emoji: weatherIcon('overcast-rain'),                                                     label: 'Showers' };
-            if (code === 85 || code === 86)    return { emoji: weatherIcon('overcast-snow'),                                                     label: 'Snow Showers' };
-            if (code >= 95 && code <= 99)      return { emoji: weatherIcon('thunderstorms-rain'),                                                label: 'Thunderstorm' };
-            return { emoji: weatherIcon('not-available'),                                                                                         label: '' };
+            if (code === 0)                  return { icon: isDay ? 'bi-sun' : 'bi-moon',               label: 'Clear' };
+            if (code === 1 || code === 2)    return { icon: isDay ? 'bi-cloud-sun' : 'bi-cloud-moon',   label: code === 1 ? 'Mainly Clear' : 'Partly Cloudy' };
+            if (code === 3)                  return { icon: 'bi-cloud',                                  label: 'Overcast' };
+            if (code >= 45 && code <= 48)    return { icon: 'bi-cloud-fog',                             label: 'Foggy' };
+            if (code >= 51 && code <= 57)    return { icon: 'bi-cloud-drizzle',                         label: 'Drizzle' };
+            if (code >= 61 && code <= 67)    return { icon: 'bi-cloud-rain',                            label: 'Rain' };
+            if (code >= 71 && code <= 77)    return { icon: 'bi-cloud-snow',                            label: 'Snow' };
+            if (code >= 80 && code <= 82)    return { icon: 'bi-cloud-rain-heavy',                      label: 'Showers' };
+            if (code === 85 || code === 86)  return { icon: 'bi-cloud-snow',                            label: 'Snow Showers' };
+            if (code >= 95 && code <= 99)    return { icon: 'bi-cloud-lightning-rain',                  label: 'Thunderstorm' };
+            return { icon: 'bi-question-circle', label: '' };
         }
-        
-        const WEATHER_CACHE_KEY = 'standup_weather_cache';
-        const WEATHER_CACHE_TTL = 30 * 60 * 1000; // 30 minutes
 
-        function applyWeatherData(emoji, temp, city) {
-            const el = document.getElementById('weather-display');
-            if (el) {
-                el.innerHTML = `<span>${emoji}</span><span class="weather-temp">${temp}°F</span>`;
-                el.classList.add('loaded');
-                const box = document.getElementById('weather-box');
-                if (box) box.classList.add('loaded');
+        const WEATHER_CACHE_KEY = 'standup_weather_v2';
+        const WEATHER_CACHE_TTL = 30 * 60 * 1000;
+        let weatherApplied = false;
+        let geoApplied = false;
+
+        function showWeatherBox() {
+            const box = document.getElementById('weather-box');
+            if (box) box.classList.add('loaded');
+        }
+
+        function showWeatherLoading() {
+            showWeatherBox();
+            const display = document.getElementById('weather-display');
+            if (display) {
+                display.innerHTML = `<i class="bi bi-arrow-clockwise weather-icon weather-spin"></i><span class="weather-temp">Loading...</span>`;
+                display.classList.add('loaded');
             }
-            if (city) {
-                const cityEl = document.getElementById('weather-city');
-                if (cityEl) {
+        }
+
+        function showWeatherUnavailable() {
+            showWeatherBox();
+            const display = document.getElementById('weather-display');
+            if (display) {
+                display.innerHTML = `<i class="bi bi-exclamation-triangle weather-icon"></i><span class="weather-temp">Unavailable</span>`;
+                display.classList.add('loaded');
+            }
+            const cityEl = document.getElementById('weather-city');
+            if (cityEl) cityEl.classList.remove('loaded');
+        }
+
+        function applyWeatherData(icon, temp, city, fromGeo = false) {
+            if (geoApplied && !fromGeo) return; // don't let IP overwrite a precise GPS fix
+            weatherApplied = true;
+            if (fromGeo) geoApplied = true;
+            showWeatherBox();
+            const display = document.getElementById('weather-display');
+            if (display) {
+                display.innerHTML = `<i class="bi ${icon} weather-icon"></i><span class="weather-temp">${temp}°F</span>`;
+                display.classList.add('loaded');
+            }
+            const cityEl = document.getElementById('weather-city');
+            if (cityEl) {
+                if (city) {
                     cityEl.textContent = city;
                     cityEl.classList.add('loaded');
+                } else {
+                    cityEl.classList.remove('loaded');
                 }
             }
         }
 
-        async function fetchWeatherByCoords(latitude, longitude, fallbackCity) {
+        async function fetchWeatherByCoords(latitude, longitude, fallbackCity, fromGeo = false) {
             try {
                 const weatherUrl = `https://api.open-meteo.com/v1/forecast` +
                     `?latitude=${latitude}&longitude=${longitude}` +
@@ -1117,12 +1165,12 @@
 
                 const [weatherResp, geoResp] = await Promise.all(fetches);
 
-                let emoji = '', temp = null, city = fallbackCity || '';
+                let icon = 'bi-question-circle', temp = null, city = fallbackCity || '';
 
                 if (weatherResp.ok) {
                     const data = await weatherResp.json();
                     temp = Math.round(data.current.temperature_2m);
-                    ({ emoji } = getWeatherInfo(data.current.weathercode, data.current.is_day === 1));
+                    ({ icon } = getWeatherInfo(data.current.weathercode, data.current.is_day === 1));
                 }
 
                 if (geoResp && geoResp.ok) {
@@ -1134,12 +1182,12 @@
                 }
 
                 if (temp !== null) {
-                    applyWeatherData(emoji, temp, city);
+                    applyWeatherData(icon, temp, city, fromGeo);
                     try {
-                        localStorage.setItem(WEATHER_CACHE_KEY, JSON.stringify({ emoji, temp, city, ts: Date.now() }));
-                    } catch (e) { /* storage full */ }
+                        localStorage.setItem(WEATHER_CACHE_KEY, JSON.stringify({ icon, temp, city, ts: Date.now() }));
+                    } catch (e) {}
                 }
-            } catch (e) { /* silent on fetch error */ }
+            } catch (e) {}
         }
 
         async function fetchWeatherByIP() {
@@ -1149,36 +1197,44 @@
                 const data = await resp.json();
                 if (!data.latitude || !data.longitude) return;
                 const city = [data.city, data.region].filter(Boolean).join(', ');
-                await fetchWeatherByCoords(data.latitude, data.longitude, city);
-            } catch (e) { /* silent on fetch error */ }
+                await fetchWeatherByCoords(data.latitude, data.longitude, city, false);
+            } catch (e) {}
         }
 
         async function initWeather() {
-            // Use cache if still fresh
+            showWeatherLoading();
+
             try {
                 const raw = localStorage.getItem(WEATHER_CACHE_KEY);
                 if (raw) {
                     const cached = JSON.parse(raw);
                     if (Date.now() - cached.ts < WEATHER_CACHE_TTL) {
-                        applyWeatherData(cached.emoji, cached.temp, cached.city);
+                        applyWeatherData(cached.icon, cached.temp, cached.city);
                         return;
                     }
                 }
-            } catch (e) { /* ignore bad cache */ }
+            } catch (e) {}
 
-            if (!navigator.geolocation) {
-                fetchWeatherByIP();
-                return;
+            // Start IP fetch immediately — no permission prompt, always works
+            const ipPromise = fetchWeatherByIP();
+
+            // Also request browser geolocation in parallel for a more precise fix
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    async function(pos) {
+                        await fetchWeatherByCoords(pos.coords.latitude, pos.coords.longitude, null, true);
+                    },
+                    function() {}
+                );
             }
 
-            navigator.geolocation.getCurrentPosition(
-                async function(pos) {
-                    await fetchWeatherByCoords(pos.coords.latitude, pos.coords.longitude, null);
-                },
-                function() { fetchWeatherByIP(); }
-            );
+            await ipPromise;
+
+            if (!weatherApplied) {
+                showWeatherUnavailable();
+            }
         }
-        
+
         initWeather();
         
         function navigateToEntry(dateString) {
